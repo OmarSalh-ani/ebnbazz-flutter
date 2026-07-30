@@ -1,0 +1,109 @@
+# White-label Codemagic template
+# Copy to codemagic.yaml and replace CUSTOMER_* placeholders.
+# Do not commit customer signing secrets — configure them in the Codemagic UI.
+
+workflows:
+  flutter-ios-signed:
+    name: Flutter iOS (App Store) — CUSTOMER_NAME
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    integrations:
+      # Create an App Store Connect integration in Codemagic and put its name here
+      app_store_connect: CUSTOMER_ASC_INTEGRATION_NAME
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.customer.app
+      vars:
+        BUNDLE_ID: com.customer.app
+        # Mobile API host for this customer
+        API_BASE_URL: https://api.customer.com
+        MEDIA_BASE_URL: https://admin.customer.com/
+        PRIVACY_POLICY_URL: https://customer.com/privacy-policy
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Set up code signing on Xcode project
+        script: xcode-project use-profiles
+      - name: Clean and fetch dependencies
+        script: |
+          flutter clean
+          flutter pub get
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios
+          pod install
+      - name: Build IPA
+        script: |
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist \
+            --dart-define=API_BASE_URL=$API_BASE_URL \
+            --dart-define=MEDIA_BASE_URL=$MEDIA_BASE_URL \
+            --dart-define=PRIVACY_POLICY_URL=$PRIVACY_POLICY_URL
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+        submit_to_app_store: true
+        cancel_previous_submissions: true
+        release_type: AFTER_APPROVAL
+
+  flutter-android-play:
+    name: Flutter Android (Google Play) — CUSTOMER_NAME
+    max_build_duration: 120
+    instance_type: linux_x2
+    environment:
+      android_signing:
+        # Upload the customer keystore in Codemagic → Code signing identities, then name it here
+        - CUSTOMER_KEYSTORE_REFERENCE
+      groups:
+        # Variable group holding GCLOUD_SERVICE_ACCOUNT_CREDENTIALS for Google Play publishing
+        - google_play
+      vars:
+        PACKAGE_NAME: com.customer.app
+        API_BASE_URL: https://api.customer.com
+        MEDIA_BASE_URL: https://admin.customer.com/
+        PRIVACY_POLICY_URL: https://customer.com/privacy-policy
+      flutter: stable
+    scripts:
+      - name: Clean and fetch dependencies
+        script: |
+          flutter clean
+          flutter pub get
+      - name: Build App Bundle
+        script: |
+          flutter build appbundle --release \
+            --dart-define=API_BASE_URL=$API_BASE_URL \
+            --dart-define=MEDIA_BASE_URL=$MEDIA_BASE_URL \
+            --dart-define=PRIVACY_POLICY_URL=$PRIVACY_POLICY_URL
+    artifacts:
+      - build/**/outputs/bundle/**/*.aab
+      - build/**/outputs/**/mapping.txt
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
+
+  flutter-ios-unsigned:
+    name: Flutter iOS (compile check, no signing)
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Install CocoaPods dependencies
+        script: find . -name "Podfile" -execdir pod install \;
+      - name: Build iOS debug without code signing
+        script: flutter build ios --debug --no-codesign
+    artifacts:
+      - build/ios/iphoneos/**/*.app
+      - /tmp/xcodebuild_logs/*.log

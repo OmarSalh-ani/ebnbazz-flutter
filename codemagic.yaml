@@ -1,0 +1,103 @@
+workflows:
+  flutter-ios-signed:
+    name: Flutter iOS (App Store) — EbnBazz
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    integrations:
+      # Create an App Store Connect integration in Codemagic and put its name here
+      app_store_connect: EbnBazz
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.alsalhani.ebnbazz
+      vars:
+        BUNDLE_ID: com.alsalhani.ebnbazz
+        API_BASE_URL: https://teachermobileapi.ebnbazz.com
+        MEDIA_BASE_URL: https://admin-api.ebnbazz.com/
+        PRIVACY_POLICY_URL: https://ebnbazz.com/privacy-policy
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Set up code signing on Xcode project
+        script: xcode-project use-profiles
+      - name: Clean and fetch dependencies
+        script: |
+          flutter clean
+          flutter pub get
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios
+          pod install
+      - name: Build IPA
+        script: |
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist \
+            --dart-define=API_BASE_URL=$API_BASE_URL \
+            --dart-define=MEDIA_BASE_URL=$MEDIA_BASE_URL \
+            --dart-define=PRIVACY_POLICY_URL=$PRIVACY_POLICY_URL
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+        submit_to_app_store: true
+        cancel_previous_submissions: true
+        release_type: AFTER_APPROVAL
+
+  flutter-android-play:
+    name: Flutter Android (Google Play) — EbnBazz
+    max_build_duration: 120
+    instance_type: linux_x2
+    environment:
+      android_signing:
+        # Upload the keystore in Codemagic → Code signing identities, then name it here
+        - ebnbazz_keystore
+      groups:
+        - google_play
+      vars:
+        PACKAGE_NAME: com.alsalhani.ebnbazz
+        API_BASE_URL: https://teachermobileapi.ebnbazz.com
+        MEDIA_BASE_URL: https://admin-api.ebnbazz.com/
+        PRIVACY_POLICY_URL: https://ebnbazz.com/privacy-policy
+      flutter: stable
+    scripts:
+      - name: Clean and fetch dependencies
+        script: |
+          flutter clean
+          flutter pub get
+      - name: Build App Bundle
+        script: |
+          flutter build appbundle --release \
+            --dart-define=API_BASE_URL=$API_BASE_URL \
+            --dart-define=MEDIA_BASE_URL=$MEDIA_BASE_URL \
+            --dart-define=PRIVACY_POLICY_URL=$PRIVACY_POLICY_URL
+    artifacts:
+      - build/**/outputs/bundle/**/*.aab
+      - build/**/outputs/**/mapping.txt
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
+
+  flutter-ios-unsigned:
+    name: Flutter iOS (compile check, no signing)
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Install CocoaPods dependencies
+        script: find . -name "Podfile" -execdir pod install \;
+      - name: Build iOS debug without code signing
+        script: flutter build ios --debug --no-codesign
+    artifacts:
+      - build/ios/iphoneos/**/*.app
+      - /tmp/xcodebuild_logs/*.log

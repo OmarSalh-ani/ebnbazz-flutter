@@ -1,0 +1,428 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head>
+
+  <!--
+
+    If you are serving your web app in a path other than the root, change the
+
+    href value below to reflect the base path you are serving from.
+
+
+
+    The path provided below has to start and end with a slash "/" in order for
+
+    it to work correctly.
+
+
+
+    For more details:
+
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+
+
+    This is a placeholder for base href that will be replaced by the value of
+
+    the `--base-href` argument provided to `flutter build`.
+
+  -->
+
+  <base href="$FLUTTER_BASE_HREF">
+
+
+
+  <meta charset="UTF-8">
+
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <meta name="description" content="مركز الامام عبد العزيز بن باز للعلوم الشرعية - مركز الامام عبد العزيز بن باز للعلوم الشرعية عبدالله المبارك الصباح">
+
+
+
+  <!-- iOS meta tags & icons -->
+
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <meta name="apple-mobile-web-app-title" content="مركز الامام عبد العزيز بن باز للعلوم الشرعية">
+
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+
+
+  <!-- Favicon -->
+
+  <link rel="icon" type="image/png" href="favicon.png">
+
+
+
+  <title>مركز الامام عبد العزيز بن باز للعلوم الشرعية</title>
+
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Load FontManifest before heavy canvaskit (avoids Firefox NS_ERROR_NET_INTERRUPT). -->
+  <link rel="preload" href="assets/FontManifest.json" as="fetch" crossorigin="">
+
+  <link rel="preload" href="flutter_bootstrap.js" as="script">
+
+  <link rel="preload" href="main.dart.js" as="script">
+
+  <link rel="preload" href="images/logo.png" as="image">
+
+
+
+  <style>
+
+    html, body {
+
+      margin: 0;
+
+      padding: 0;
+
+      width: 100%;
+
+      height: 100%;
+
+      overflow: hidden;
+
+      background: #FFFFFF;
+
+    }
+
+
+
+    #flutter-web-loader {
+
+      position: fixed;
+
+      inset: 0;
+
+      z-index: 999999;
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: center;
+
+      justify-content: center;
+
+      padding: 24px;
+
+      box-sizing: border-box;
+
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+
+      color: #071B3A;
+
+      transition: opacity 0.45s ease, visibility 0.45s ease;
+
+    }
+
+
+
+    #flutter-web-loader.fade-out {
+
+      opacity: 0;
+
+      visibility: hidden;
+
+      pointer-events: none;
+
+    }
+
+
+
+    .web-loader__bg {
+
+      position: absolute;
+
+      inset: 0;
+
+      background: #FFFFFF;
+
+      z-index: -1;
+
+    }
+
+
+
+    .web-loader__logo {
+
+      width: min(300px, 62vw);
+
+      margin: 0;
+
+      animation: web-loader-logo-in 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+
+    }
+
+
+
+    .web-loader__logo img {
+
+      width: 100%;
+
+      height: auto;
+
+      display: block;
+
+    }
+
+
+
+    @keyframes web-loader-logo-in {
+
+      from {
+
+        opacity: 0;
+
+        transform: scale(0.85);
+
+      }
+
+      to {
+
+        opacity: 1;
+
+        transform: scale(1);
+
+      }
+
+    }
+
+
+
+    @media (max-height: 560px) {
+
+      .web-loader__logo {
+
+        width: min(240px, 58vw);
+
+      }
+
+    }
+
+  </style>
+
+  
+  
+  <script>
+    // Clear legacy PWA caches before Flutter loads (fixes FontManifest NetworkError).
+    window.__flutterWebBoot = (function () {
+      function clearLegacyPwa() {
+        if (!('serviceWorker' in navigator)) {
+          return Promise.resolve();
+        }
+        return navigator.serviceWorker
+          .getRegistrations()
+          .then(function (regs) {
+            return Promise.all(
+              regs.map(function (reg) {
+                return reg.unregister();
+              }),
+            );
+          })
+          .then(function () {
+            if (!('caches' in window)) {
+              return;
+            }
+            return caches.keys().then(function (keys) {
+              return Promise.all(
+                keys.map(function (key) {
+                  return caches.delete(key);
+                }),
+              );
+            });
+          });
+      }
+
+      function warmFontManifest() {
+        return fetch('assets/FontManifest.json', { cache: 'default' }).then(function (r) {
+          if (!r.ok) {
+            throw new Error('FontManifest HTTP ' + r.status);
+          }
+          return r.json();
+        });
+      }
+
+      function startFlutter() {
+        var script = document.createElement('script');
+        script.src = 'flutter_bootstrap.js';
+        script.async = true;
+        document.head.appendChild(script);
+      }
+
+      return clearLegacyPwa()
+        .then(warmFontManifest)
+        .then(startFlutter)
+        .catch(function (err) {
+          console.warn('FontManifest preload failed, starting Flutter anyway:', err);
+          startFlutter();
+        });
+    })();
+  </script>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <style id="splash-screen-style">
+    html {
+      height: 100%
+    }
+
+    body {
+      margin: 0;
+      min-height: 100%;
+      background-color: #FFFFFF;
+          background-size: 100% 100%;
+    }
+
+    .center {
+      margin: 0;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      -ms-transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%);
+    }
+
+    .contain {
+      display:block;
+      width:100%; height:100%;
+      object-fit: contain;
+    }
+
+    .stretch {
+      display:block;
+      width:100%; height:100%;
+    }
+
+    .cover {
+      display:block;
+      width:100%; height:100%;
+      object-fit: cover;
+    }
+
+    .bottom {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      -ms-transform: translate(-50%, 0);
+      transform: translate(-50%, 0);
+    }
+
+    .bottomLeft {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+    }
+
+    .bottomRight {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+    }
+  </style>
+  <script id="splash-screen-script">
+    function removeSplashFromWeb() {
+      document.getElementById("splash")?.remove();
+      document.getElementById("splash-branding")?.remove();
+      document.body.style.background = "transparent";
+    }
+  </script>
+</head>
+
+<body>
+  <picture id="splash">
+      <source srcset="splash/img/light-1x.png 1x, splash/img/light-2x.png 2x, splash/img/light-3x.png 3x, splash/img/light-4x.png 4x" media="(prefers-color-scheme: light)">
+      <source srcset="splash/img/dark-1x.png 1x, splash/img/dark-2x.png 2x, splash/img/dark-3x.png 3x, splash/img/dark-4x.png 4x" media="(prefers-color-scheme: dark)">
+      <img class="center" aria-hidden="true" src="splash/img/light-1x.png" alt="">
+  </picture>
+  
+  
+  
+  
+  
+  
+
+  <div id="flutter-web-loader" role="status" aria-live="polite" aria-busy="true">
+
+    <div class="web-loader__bg" aria-hidden="true"></div>
+
+    <div class="web-loader__logo">
+
+      <img src="images/logo.png" alt="مركز الإمام عبد العزيز بن باز" width="280" height="280">
+
+    </div>
+
+  </div>
+
+
+
+  <script>
+
+    (function () {
+
+      var loader = document.getElementById('flutter-web-loader');
+
+
+
+      function hideWebLoader() {
+
+        if (!loader || loader.classList.contains('fade-out')) {
+
+          return;
+
+        }
+
+
+
+        loader.classList.add('fade-out');
+
+        loader.setAttribute('aria-busy', 'false');
+
+
+
+        window.setTimeout(function () {
+
+          if (loader && loader.parentNode) {
+
+            loader.parentNode.removeChild(loader);
+
+          }
+
+          document.documentElement.style.overflow = '';
+
+          document.body.style.overflow = '';
+
+        }, 500);
+
+      }
+
+
+
+      window.addEventListener('flutter-first-frame', hideWebLoader);
+
+    })();
+
+  </script>
+
+
+
+
+
+
+
+
+</body></html>

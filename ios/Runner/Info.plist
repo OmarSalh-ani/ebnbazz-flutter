@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+	<dict>
+		<key>CFBundleDevelopmentRegion</key>
+		<string>$(DEVELOPMENT_LANGUAGE)</string>
+		<key>CFBundleDisplayName</key>
+		<string>مركز الأمام بن باز</string>
+		<key>CFBundleExecutable</key>
+		<string>$(EXECUTABLE_NAME)</string>
+		<key>CFBundleIdentifier</key>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+		<key>CFBundleInfoDictionaryVersion</key>
+		<string>6.0</string>
+		<key>CFBundleName</key>
+		<string>مركز الأمام بن باز</string>
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+		<key>CFBundleShortVersionString</key>
+		<string>$(FLUTTER_BUILD_NAME)</string>
+		<key>CFBundleSignature</key>
+		<string>????</string>
+		<key>CFBundleVersion</key>
+		<string>$(FLUTTER_BUILD_NUMBER)</string>
+		<key>LSRequiresIPhoneOS</key>
+		<true/>
+		<key>UILaunchStoryboardName</key>
+		<string>LaunchScreen</string>
+		<key>UIMainStoryboardFile</key>
+		<string>Main</string>
+		<key>UISupportedInterfaceOrientations</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<key>UISupportedInterfaceOrientations~ipad</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationPortraitUpsideDown</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<key>CADisableMinimumFrameDurationOnPhone</key>
+		<true/>
+		<key>UIApplicationSupportsIndirectInputEvents</key>
+		<true/>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>يستخدم التطبيق موقعك للتأكد من وجودك في المسجد عند تسجيل الحضور، .</string>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>يستخدم التطبيق موقعك للتأكد من وجودك في المسجد عند تسجيل الحضور، .</string>
+		<key>NSLocationAlwaysUsageDescription</key>
+		<string>يستخدم التطبيق موقعك للتأكد من وجودك في المسجد عند تسجيل الحضور، .</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>يحتاج التطبيق إلى الميكروفون لمكالمات الفيديو مع المعلم وللأوامر الصوتية.</string>
+		<key>NSSpeechRecognitionUsageDescription</key>
+		<string>يحتاج التطبيق إلى التعرف على الكلام لتنفيذ الأوامر الصوتية.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>يحتاج التطبيق إلى الكاميرا لمكالمات الفيديو مع المعلم ولمسح رمز QR عند تسجيل حضور الطلاب.</string>
+		<key>NSFaceIDUsageDescription</key>
+		<string>يُستخدم Face ID أو البصمة للتحقق الآمن عند تسجيل الدخول وتأكيد الحضور.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>يحتاج التطبيق إلى حفظ الصور في معرض جهازك عند مشاركة آيات القرآن.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>يحتاج التطبيق إلى الوصول للصور لحفظ محتوى القرآن في معرض جهازك.</string>
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>remote-notification</string>
+		</array>
+		<key>LSApplicationQueriesSchemes</key>
+		<array>
+			<string>comgooglemaps</string>
+			<string>googlemaps</string>
+			<string>maps</string>
+			<string>geo</string>
+		</array>
+		<key>UIStatusBarHidden</key>
+		<true/>
+		<key>UIViewControllerBasedStatusBarAppearance</key>
+		<false/>
+	</dict>
+</plist>

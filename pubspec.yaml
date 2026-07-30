@@ -1,0 +1,182 @@
+name: masged_parent_app
+description: حلقات مسجد مبارك الصباح - تطبيق مركز الامام عبد العزيز بن باز للعلوم الشرعية لأولياء الأمور والمعلمين
+publish_to: 'none'
+version: 1.0.3+21
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+
+  # Navigation
+  go_router: ^13.2.0
+
+  # Fonts & Icons
+  google_fonts: ^6.2.1
+
+  # UI Components
+  pin_code_fields: ^8.0.1
+  flutter_animate: ^4.5.0
+  quran:
+    path: ./quran-1.2.2
+  uuid: ^4.3.3
+  crypto: ^3.0.7
+  speech_to_text: ^7.0.0
+  local_auth: ^3.0.1
+  mobile_scanner: ^7.2.0
+
+  # Storage
+  shared_preferences: ^2.2.3
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # Utils
+  intl: ^0.20.2
+  geolocator: ^14.0.2
+  shimmer: ^3.0.0
+  http: ^1.6.0
+  url_launcher: ^6.3.2
+  path_provider: ^2.1.5
+  dio: ^5.7.0
+  signalr_netcore: ^1.3.9
+  agora_rtc_engine: 6.5.3
+  scrollable_positioned_list: any
+  flutter_screenutil: ^5.9.3
+  group_list_view: ^1.1.1
+  string_validator: ^0.3.0
+  modal_bottom_sheet: ^3.0.0
+  share_plus: ^11.0.0
+  visibility_detector: ^0.4.0+2
+  wakelock_plus: ^1.2.11
+  fluttericon: ^2.0.0
+  easy_container: any
+  flutter_html: ^3.0.0
+  permission_handler: ^12.0.1
+  connectivity_plus: ^7.1.1
+  firebase_core: ^3.13.0
+  firebase_messaging: ^15.2.5
+  flutter_local_notifications: ^19.0.0
+  timezone: ^0.10.1
+  image_picker: ^1.2.2
+  intl_phone_number_input: ^0.7.5
+  in_app_review: ^2.0.12
+  upgrader: ^13.5.0
+  pdfrx: ^2.2.24
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.7
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  adaptive_icon_background: "#071B3A"
+  adaptive_icon_foreground: "assets/images/app_icon_foreground.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/images/splash_logo.png
+  android: true
+  ios: true
+  web: true
+  fullscreen: true
+  android_12:
+    color: "#FFFFFF"
+    image: assets/images/splash_logo.png
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/json/
+    - assets/illustrations/onboarding/
+
+  fonts:
+    - family: AmiriQuran
+      fonts:
+        - asset: assets/fonts/AmiriQuran-Regular.ttf
+
+    - family: Taha
+      fonts:
+        - asset: assets/fonts/taha.ttf
+    - family: me
+      fonts:
+        - asset: assets/fonts/me_quran.ttf
+
+    - family: UthmanicHafs13
+      fonts:
+        - asset: assets/fonts/UthmanicHafs1Ver13.otf
+
+    - family: "qaloon"
+      fonts:
+        - asset: assets/fonts/qaloon.ttf
+
+    - family: "pdsm"
+      fonts:
+        - asset: assets/fonts/pdms.otf
+    - family: cairo
+      fonts:
+        - asset: assets/fonts/Cairo-Regular.ttf
+        - asset: assets/fonts/Cairo-Bold.ttf
+          weight: 700
+    - family: "noor ehuda"
+      fonts:
+        - asset: assets/fonts/noorehuda-org.ttf
+
+    - family: "hafs-nastaleeq-ver10-org"
+      fonts:
+        - asset: assets/fonts/hafs-nastaleeq-ver10-org.otf
+    - family: "hafs-smart-07"
+      fonts:
+        - asset: assets/fonts/hafs-smart-07.woff
+
+    - family: "jomhuria-regular-full-org"
+      fonts:
+        - asset: assets/fonts/jomhuria-regular-full-org.ttf
+
+    - family: "mada-regular-full"
+      fonts:
+        - asset: assets/fonts/mada-regular-full.ttf
+    - family: "markazi-text-regular-full-org"
+      fonts:
+        - asset: assets/fonts/markazi-text-regular-full-org.ttf
+    - family: "noto-kufi-arabic-regular-full"
+      fonts:
+        - asset: assets/fonts/noto-kufi-arabic-regular-full.ttf
+
+    - family: "qumbul-v7-full"
+      fonts:
+        - asset: assets/fonts/qumbul-v7-full.ttf
+    - family: "qur-std"
+      fonts:
+        - asset: assets/fonts/qur-std.ttf
+
+    - family: "shorooq-full-org"
+      fonts:
+        - asset: assets/fonts/shorooq-full-org.ttf
+
+    - family: "arsura"
+      fonts:
+        - asset: assets/fonts/arsura.ttf
+
+    - family: "KFGQPC Uthmanic Script HAFS Regular"
+      fonts:
+        - asset: assets/fonts/KFGQPCUthmanicScriptHAFSRegular.otf
+    - family: "roboto"
+      fonts:
+        - asset: assets/fonts/roboto.ttf
+

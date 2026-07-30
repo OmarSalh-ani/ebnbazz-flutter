@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "811806274762",
+    "project_id": "ibn-bazz-masjed",
+    "storage_bucket": "ibn-bazz-masjed.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:811806274762:android:84e7d0a5ace5fa8da23033",
+        "android_client_info": {
+          "package_name": "com.alsalhani.ebnbazz"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7R8gq1iBXX4dH5VWoO2GFfE5W-7nTcuQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

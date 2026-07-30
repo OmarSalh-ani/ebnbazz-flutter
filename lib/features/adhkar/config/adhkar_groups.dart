@@ -1,0 +1,195 @@
+import 'package:flutter/material.dart';
+
+import '../models/adhkar_group.dart';
+
+const _morningEvening = [1];
+
+const _sleep = [2, 3, 29, 30, 31, 32, 33];
+
+const _afterPrayer = [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28];
+
+const _mosque = [10, 11, 12, 13];
+
+const _selected = [
+  34,
+  35,
+  40,
+  41,
+  43,
+  44,
+  45,
+  46,
+  82,
+  92,
+  106,
+  107,
+  108,
+  129,
+];
+
+const _occasions = [
+  47,
+  48,
+  49,
+  50,
+  51,
+  52,
+  53,
+  54,
+  55,
+  56,
+  57,
+  58,
+  59,
+  60,
+  61,
+  62,
+  63,
+  64,
+  65,
+  66,
+  67,
+  68,
+  69,
+  70,
+  71,
+  72,
+  73,
+  74,
+  75,
+  76,
+  115,
+  116,
+  117,
+  118,
+  119,
+  120,
+  121,
+  122,
+  123,
+  124,
+  125,
+  126,
+  127,
+  128,
+];
+
+const _miscellaneous = [
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  14,
+  15,
+  16,
+  17,
+  36,
+  37,
+  38,
+  39,
+  42,
+  77,
+  78,
+  79,
+  80,
+  81,
+  83,
+  84,
+  85,
+  86,
+  87,
+  88,
+  89,
+  90,
+  91,
+  93,
+  94,
+  95,
+  96,
+  97,
+  98,
+  99,
+  100,
+  101,
+  102,
+  103,
+  104,
+  105,
+  109,
+  110,
+  111,
+  112,
+  113,
+  114,
+  130,
+  131,
+  132,
+];
+
+const kAdhkarGroups = <AdhkarGroup>[
+  AdhkarGroup(
+    id: 'morning',
+    title: 'أذكار الصباح',
+    icon: Icons.wb_sunny_rounded,
+    gradientColors: [Color(0xFFFFE082), Color(0xFFFFB74D)],
+    categoryIds: _morningEvening,
+  ),
+  AdhkarGroup(
+    id: 'evening',
+    title: 'أذكار المساء',
+    icon: Icons.nightlight_round,
+    gradientColors: [Color(0xFFB39DDB), Color(0xFF7E57C2)],
+    categoryIds: _morningEvening,
+  ),
+  AdhkarGroup(
+    id: 'sleep',
+    title: 'أذكار النوم',
+    icon: Icons.bedtime_rounded,
+    gradientColors: [Color(0xFF90CAF9), Color(0xFF1A237E)],
+    categoryIds: _sleep,
+  ),
+  AdhkarGroup(
+    id: 'after_prayer',
+    title: 'أذكار بعد الصلاة',
+    icon: Icons.self_improvement_rounded,
+    gradientColors: [Color(0xFFA5D6A7), Color(0xFF388E3C)],
+    categoryIds: _afterPrayer,
+  ),
+  AdhkarGroup(
+    id: 'mosque',
+    title: 'دعاء الدخول إلى المسجد ودعاء الخروج منه',
+    icon: Icons.mosque_rounded,
+    gradientColors: [Color(0xFF81C784), Color(0xFF2E7D32)],
+    categoryIds: _mosque,
+  ),
+  AdhkarGroup(
+    id: 'selected',
+    title: 'أدعية مختارة',
+    icon: Icons.front_hand_rounded,
+    gradientColors: [Color(0xFFFFE0B2), Color(0xFFD7CCC8)],
+    categoryIds: _selected,
+  ),
+  AdhkarGroup(
+    id: 'miscellaneous',
+    title: 'أذكار متنوعة',
+    icon: Icons.circle_outlined,
+    gradientColors: [Color(0xFFC8E6C9), Color(0xFF4A9B8F)],
+    categoryIds: _miscellaneous,
+  ),
+  AdhkarGroup(
+    id: 'occasions',
+    title: 'أذكار المناسبات',
+    icon: Icons.celebration_rounded,
+    gradientColors: [Color(0xFFCE93D8), Color(0xFF6A1B9A)],
+    categoryIds: _occasions,
+  ),
+];
+
+AdhkarGroup? adhkarGroupById(String groupId) {
+  for (final group in kAdhkarGroups) {
+    if (group.id == groupId) return group;
+  }
+  return null;
+}
