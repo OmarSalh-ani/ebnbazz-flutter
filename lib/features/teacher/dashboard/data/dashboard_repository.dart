@@ -6,6 +6,6 @@ class DashboardRepository {
 
   final HomeApi _api;
 
-  Future<DashboardPageData> loadPage({String? search}) =>
-      _api.getHome(search: search);
+  Future<DashboardPageData> loadPage({String? search, bool isMrkz = false}) =>
+      _api.getHome(search: search, isMrkz: isMrkz);
 }

@@ -18,7 +18,6 @@ const _dashboardStudent = StudentListItem(
   name: 'أحمد محمد',
   age: 12,
   group: 'A',
-  planLevelName: 'جزء عم',
   isPresentToday: 'حاضر',
   departureStatusToday: '',
   departureTimeToday: '',

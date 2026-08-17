@@ -8,6 +8,7 @@ class AuthUser {
     required this.circleId,
     required this.isAdmin,
     required this.isGirlTeacher,
+    this.isMrkz = false,
   });
 
   final int id;
@@ -18,6 +19,7 @@ class AuthUser {
   final int circleId;
   final bool isAdmin;
   final bool isGirlTeacher;
+  final bool isMrkz;
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
     return AuthUser(
@@ -29,6 +31,7 @@ class AuthUser {
       circleId: json['circleId'] as int? ?? -1,
       isAdmin: json['isAdmin'] as bool? ?? false,
       isGirlTeacher: json['isGirlTeacher'] as bool? ?? false,
+      isMrkz: json['isMrkz'] as bool? ?? false,
     );
   }
 
@@ -41,6 +44,7 @@ class AuthUser {
         'circleId': circleId,
         'isAdmin': isAdmin,
         'isGirlTeacher': isGirlTeacher,
+        'isMrkz': isMrkz,
       };
 
   bool get isSessionValid {

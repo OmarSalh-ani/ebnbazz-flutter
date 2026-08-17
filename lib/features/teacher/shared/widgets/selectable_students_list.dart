@@ -3,6 +3,7 @@ import 'package:masged_parent_app/core/theme/app_fonts.dart';
 import 'package:masged_parent_app/core/utils/arabic_search_utils.dart';
 
 import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/theme/app_theme_extensions.dart';
 import '../models/selectable_student_row.dart';
 
 class SelectableStudentsList extends StatefulWidget {
@@ -122,7 +123,7 @@ class _SelectableStudentsListState extends State<SelectableStudentsList> {
             decoration: InputDecoration(
               hintText: widget.searchHint,
               hintStyle: AppFonts.cairo(color: AppColors.textHint),
-              prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+              prefixIcon: Icon(Icons.search, color: context.appPrimary),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.clear),
@@ -183,7 +184,7 @@ class _SelectableStudentsListState extends State<SelectableStudentsList> {
                   onChanged: (v) {
                     widget.onSelectionChanged(student.id, v ?? false);
                   },
-                  activeColor: AppColors.primary,
+                  activeColor: context.appPrimary,
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
                 );
@@ -197,11 +198,11 @@ class _SelectableStudentsListState extends State<SelectableStudentsList> {
   Widget _buildAvatar(SelectableStudentRow student) {
     return CircleAvatar(
       radius: 22,
-      backgroundColor: AppColors.primaryLight,
+      backgroundColor: context.appPrimaryLight,
       backgroundImage:
           student.imageUrl != null ? NetworkImage(student.imageUrl!) : null,
       child: student.imageUrl == null
-          ? const Icon(Icons.person, color: AppColors.primary, size: 22)
+          ? Icon(Icons.person, color: context.appPrimary, size: 22)
           : null,
     );
   }

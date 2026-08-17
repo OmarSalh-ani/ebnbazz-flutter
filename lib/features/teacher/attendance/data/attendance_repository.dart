@@ -11,8 +11,8 @@ class AttendanceRepository {
   final AttendanceApi _attendanceApi;
   final LocationService _locationService;
 
-  Future<List<StudentListItem>> loadStudents() async {
-    final home = await _homeApi.getHome();
+  Future<List<StudentListItem>> loadStudents({bool isMrkz = false}) async {
+    final home = await _homeApi.getHome(isMrkz: isMrkz);
     return home.students;
   }
 

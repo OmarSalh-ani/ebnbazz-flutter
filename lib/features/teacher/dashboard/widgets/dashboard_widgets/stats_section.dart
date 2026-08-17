@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/theme/app_theme_extensions.dart';
 import 'package:masged_parent_app/shared/widgets/mosque_section_header.dart';
 import '../../models/dashboard_models.dart';
 import 'attendance_overview_bar.dart';
@@ -36,8 +37,8 @@ class StatsSection extends StatelessWidget {
                 tooltip: 'إجمالي الطلاب',
                 value: '${stats.totalStudents}',
                 icon: Icons.groups_rounded,
-                color: AppColors.primary,
-                lightColor: AppColors.primaryLight,
+                color: context.appPrimary,
+                lightColor: context.appPrimaryLight,
               ),
             ),
             const SizedBox(width: 8),

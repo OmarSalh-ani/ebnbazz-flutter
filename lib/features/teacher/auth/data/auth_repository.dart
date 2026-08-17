@@ -22,6 +22,7 @@ class AuthRepository {
       circleId: user.circleId,
       isAdmin: user.isAdmin,
       isGirlTeacher: user.isGirlTeacher,
+      isMrkz: user.isMrkz,
     );
 
     if (!session.isSessionValid) {

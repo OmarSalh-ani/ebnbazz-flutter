@@ -219,7 +219,7 @@ class ChildrenScreen extends ConsumerWidget {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            '${child.level} - ${child.group}',
+                            child.group,
                             style: AppFonts.cairo(
                               fontSize: 12,
                               color: AppColors.textSecondary,

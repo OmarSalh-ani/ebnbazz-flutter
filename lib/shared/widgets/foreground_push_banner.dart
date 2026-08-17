@@ -238,7 +238,7 @@ class _ForegroundPushBannerState extends ConsumerState<ForegroundPushBanner>
                                         ),
                                       Expanded(
                                         child: Text(
-                                          'مسجد مبارك',
+                                          'مركز ابن باز',
                                           style: AppFonts.cairo(
                                             fontSize: 11,
                                             color: AppColors.textHint,

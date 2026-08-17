@@ -17,12 +17,10 @@ class TestsScreen extends ConsumerStatefulWidget {
     super.key,
     required this.studentId,
     this.studentName,
-    this.planLevelName,
   });
 
   final int studentId;
   final String? studentName;
-  final String? planLevelName;
 
   @override
   ConsumerState<TestsScreen> createState() => _TestsScreenState();
@@ -382,15 +380,6 @@ class _TestsScreenState extends ConsumerState<TestsScreen> {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                if (widget.planLevelName != null &&
-                    widget.planLevelName!.isNotEmpty)
-                  Text(
-                    widget.planLevelName!,
-                    style: AppFonts.cairo(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
               ],
             ),
           ),

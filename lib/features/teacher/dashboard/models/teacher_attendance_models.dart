@@ -33,35 +33,6 @@ class TeacherAttendanceStatus {
   }
 }
 
-class MosqueProximity {
-  const MosqueProximity({
-    required this.hasMosqueLocation,
-    required this.distanceMeters,
-    required this.distanceDisplay,
-    required this.message,
-    required this.isWithinRadius,
-    required this.maxAllowedMeters,
-  });
-
-  final bool hasMosqueLocation;
-  final double distanceMeters;
-  final String distanceDisplay;
-  final String message;
-  final bool isWithinRadius;
-  final double maxAllowedMeters;
-
-  factory MosqueProximity.fromJson(Map<String, dynamic> json) {
-    return MosqueProximity(
-      hasMosqueLocation: json['hasMosqueLocation'] as bool? ?? false,
-      distanceMeters: (json['distanceMeters'] as num?)?.toDouble() ?? 0,
-      distanceDisplay: json['distanceDisplay'] as String? ?? '',
-      message: json['message'] as String? ?? '',
-      isWithinRadius: json['isWithinRadius'] as bool? ?? false,
-      maxAllowedMeters: (json['maxAllowedMeters'] as num?)?.toDouble() ?? 200,
-    );
-  }
-}
-
 class LocationRequest {
   const LocationRequest({
     required this.latitude,

@@ -325,22 +325,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ],
                               ),
                             ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.school_outlined,
-                                    size: 14, color: AppColors.textSecondary),
-                                const SizedBox(width: 4),
-                                Text(
-                                  child.level,
-                                  style: AppFonts.cairo(
-                                    fontSize: 13,
-                                    color: AppColors.textSecondary,
-                                    fontWeight: FontWeight.w500,
+                            if (child.group.isNotEmpty)
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.groups_outlined,
+                                      size: 14, color: AppColors.textSecondary),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    child.group,
+                                    style: AppFonts.cairo(
+                                      fontSize: 13,
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
                             GestureDetector(
                               onTap: () =>
                                   context.push(AppRoutes.quran, extra: child),

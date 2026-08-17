@@ -132,14 +132,6 @@ class TeacherAttendanceRepository {
     return credentials.hash;
   }
 
-  Future<MosqueProximity> getMosqueProximity() async {
-    final coords = await _locationService.getCurrentCoordinates();
-    return _api.getProximity(
-      latitude: coords.latitude,
-      longitude: coords.longitude,
-    );
-  }
-
   Future<TeacherAttendanceLogResponse> getAttendanceLog({
     required DateTime fromDate,
     required DateTime toDate,

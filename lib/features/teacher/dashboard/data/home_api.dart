@@ -6,12 +6,14 @@ class HomeApi {
 
   final TeacherApiClient _client;
 
-  Future<DashboardPageData> getHome({String? search}) {
+  Future<DashboardPageData> getHome({String? search, bool isMrkz = false}) {
     final trimmed = search?.trim();
     return _client.get<DashboardPageData>(
       '/api/home',
-      queryParameters:
-          trimmed != null && trimmed.isNotEmpty ? {'search': trimmed} : null,
+      queryParameters: {
+        if (trimmed != null && trimmed.isNotEmpty) 'search': trimmed,
+        'isMrkz': isMrkz,
+      },
       parseData: (json) => DashboardPageData.fromJson(json as Map<String, dynamic>),
     );
   }

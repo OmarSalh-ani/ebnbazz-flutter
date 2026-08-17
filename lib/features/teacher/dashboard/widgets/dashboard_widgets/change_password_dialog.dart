@@ -3,6 +3,7 @@ import 'package:masged_parent_app/core/theme/app_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/theme/app_theme_extensions.dart';
 import '../../../auth/providers/auth_providers.dart';
 
 Future<void> showChangePasswordDialog(
@@ -116,7 +117,7 @@ Future<void> showChangePasswordDialog(
                     'حفظ',
                     style: AppFonts.cairo(
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+                      color: context.appPrimary,
                     ),
                   ),
           ),

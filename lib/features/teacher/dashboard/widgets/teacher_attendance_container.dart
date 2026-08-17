@@ -7,6 +7,7 @@ import 'package:masged_parent_app/teacher_core/network/api_exception.dart';
 import 'package:masged_parent_app/teacher_core/services/location_service.dart';
 import 'package:masged_parent_app/teacher_core/services/teacher_attendance_fingerprint_service.dart';
 import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/theme/app_theme_extensions.dart';
 import '../../meetings/screens/meetings_screen.dart';
 import '../screens/teacher_attendance_log_screen.dart';
 import '../helpers/teacher_attendance_duration.dart';
@@ -14,7 +15,6 @@ import '../models/dashboard_models.dart';
 import '../models/teacher_attendance_models.dart';
 import '../providers/teacher_attendance_providers.dart';
 import 'device_re_enrollment_dialog.dart';
-import 'mosque_proximity_banner.dart';
 
 class TeacherAttendanceContainer extends ConsumerStatefulWidget {
   const TeacherAttendanceContainer({
@@ -49,18 +49,12 @@ class _TeacherAttendanceContainerState
 
   void _refreshTeacherAttendance() {
     ref.invalidate(teacherAttendanceStatusProvider);
-    ref.invalidate(mosqueProximityProvider);
   }
 
-  void _refreshMosqueProximity() {
-    ref.invalidate(mosqueProximityProvider);
-  }
-
-  Future<void> _openScreenAndRefreshProximity(Widget screen) async {
+  Future<void> _openScreen(Widget screen) async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(builder: (_) => screen),
     );
-    if (mounted) _refreshMosqueProximity();
   }
 
   void _showSnack(String message, {bool isError = false}) {
@@ -144,7 +138,6 @@ class _TeacherAttendanceContainerState
   @override
   Widget build(BuildContext context) {
     final attendanceAsync = ref.watch(teacherAttendanceStatusProvider);
-    final proximityAsync = ref.watch(mosqueProximityProvider);
     final data = widget.data;
 
     return Container(
@@ -183,26 +176,24 @@ class _TeacherAttendanceContainerState
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.history_rounded,
-                        color: AppColors.primary,
+                        color: context.appPrimary,
                         size: 28,
                       ),
                       onPressed: () {
-                        _openScreenAndRefreshProximity(
-                          const TeacherAttendanceLogScreen(),
-                        );
+                        _openScreen(const TeacherAttendanceLogScreen());
                       },
                       tooltip: 'سجل الحضور والانصراف',
                     ),
                     IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.video_call_rounded,
-                        color: AppColors.primary,
+                        color: context.appPrimary,
                         size: 28,
                       ),
                       onPressed: () {
-                        _openScreenAndRefreshProximity(const MeetingsScreen());
+                        _openScreen(const MeetingsScreen());
                       },
                       tooltip: 'الاجتماعات',
                     ),
@@ -225,10 +216,10 @@ class _TeacherAttendanceContainerState
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const CircleAvatar(
+              CircleAvatar(
                 radius: 26,
-                backgroundColor: AppColors.primaryLight,
-                child: Icon(Icons.person, size: 30, color: AppColors.primary),
+                backgroundColor: context.appPrimaryLight,
+                child: Icon(Icons.person, size: 30, color: context.appPrimary),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -253,7 +244,7 @@ class _TeacherAttendanceContainerState
                       'إعادة تحميل حالة الحضور',
                       style: AppFonts.cairo(
                         fontSize: 12,
-                        color: AppColors.primary,
+                        color: context.appPrimary,
                       ),
                     ),
                   ),
@@ -266,64 +257,6 @@ class _TeacherAttendanceContainerState
             data: (status) => _buildTodayTimesSummary(status),
             loading: () => const SizedBox.shrink(),
             error: (_, __) => const SizedBox.shrink(),
-          ),
-          proximityAsync.when(
-            data: (proximity) => MosqueProximityBanner(proximity: proximity),
-            loading: () => Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    'جاري تحديد المسافة عن المسجد...',
-                    style: AppFonts.cairo(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            error: (error, _) {
-              final message = error is LocationServiceException
-                  ? error.message
-                  : error is ApiException
-                      ? error.message
-                      : 'تعذر تحديد المسافة عن المسجد';
-              return Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.location_disabled,
-                      size: 18,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        message,
-                        style: AppFonts.cairo(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.refresh, size: 20),
-                      onPressed: _refreshMosqueProximity,
-                      tooltip: 'إعادة المحاولة',
-                    ),
-                  ],
-                ),
-              );
-            },
           ),
         ],
       ),
@@ -381,7 +314,7 @@ class _TeacherAttendanceContainerState
                 label: 'المدة',
                 value: durationLabel,
                 icon: Icons.timelapse_rounded,
-                color: AppColors.primary,
+                color: context.appPrimary,
                 compact: true,
               ),
             ),

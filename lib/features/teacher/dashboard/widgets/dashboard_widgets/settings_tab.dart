@@ -5,6 +5,7 @@ import 'package:masged_parent_app/core/theme/app_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/theme/app_theme_extensions.dart';
 import 'package:masged_parent_app/shared/widgets/settings_option_tile.dart';
 import 'package:masged_parent_app/shared/widgets/privacy_policy_link.dart';
 import 'package:masged_parent_app/shared/widgets/delete_account_dialog.dart';
@@ -12,13 +13,11 @@ import 'package:go_router/go_router.dart';
 import 'package:masged_parent_app/shared/router/app_routes.dart';
 import 'package:masged_parent_app/core/services/app_review_service.dart';
 import '../../models/dashboard_models.dart';
-import 'about_dialog.dart';
 import 'change_password_dialog.dart';
 import 'language_notice.dart';
 import 'logout_confirmation_dialog.dart';
 import 'support_dialog.dart';
 import '../../../auth/providers/auth_providers.dart';
-import '../../../plans/screens/plan_levels_screen.dart';
 import '../../screens/teacher_admin_notes_screen.dart';
 
 class SettingsTab extends ConsumerWidget {
@@ -31,6 +30,7 @@ class SettingsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final primary = context.appPrimary;
     final teacherName = data?.teacherName ?? 'المعلم';
     final circleName = data?.circleName.isNotEmpty == true
         ? data!.circleName
@@ -48,14 +48,14 @@ class SettingsTab extends ConsumerWidget {
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
                 colors: [
-                  AppColors.primary,
-                  AppColors.primary.withValues(alpha: 0.8),
+                  primary,
+                  primary.withValues(alpha: 0.8),
                 ],
               ),
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.25),
+                  color: primary.withValues(alpha: 0.25),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 ),
@@ -71,13 +71,13 @@ class SettingsTab extends ConsumerWidget {
                   ),
                   child: CircleAvatar(
                     radius: 45,
-                    backgroundColor: AppColors.primaryLight,
+                    backgroundColor: context.appPrimaryLight,
                     child: Text(
                       teacherName.isNotEmpty ? teacherName[0] : 'م',
                       style: AppFonts.cairo(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                        color: primary,
                       ),
                     ),
                   ),
@@ -159,19 +159,6 @@ class SettingsTab extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           SettingsOptionTile(
-            icon: Icons.layers_outlined,
-            title: 'مستويات الخطة والخطط الجاهزة',
-            subtitle: 'إنشاء وإدارة مستويات الحفظ الخاصة بك',
-            onTap: () {
-              Navigator.of(context).push<void>(
-                MaterialPageRoute<void>(
-                  builder: (_) => const PlanLevelsScreen(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          SettingsOptionTile(
             icon: Icons.lock_outline_rounded,
             title: 'تغيير كلمة المرور',
             subtitle: 'تحديث كلمة المرور الخاصة بحسابك',
@@ -186,7 +173,7 @@ class SettingsTab extends ConsumerWidget {
               'العربية',
               style: AppFonts.cairo(
                 fontSize: 12,
-                color: AppColors.primary,
+                color: primary,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -229,13 +216,6 @@ class SettingsTab extends ConsumerWidget {
             title: 'قيّم التطبيق',
             subtitle: 'ساعدنا بترك تقييمك على المتجر',
             onTap: () => unawaited(AppReviewService.promptNow()),
-          ),
-          const SizedBox(height: 12),
-          SettingsOptionTile(
-            icon: Icons.info_outline_rounded,
-            title: 'عن التطبيق',
-            subtitle: 'الإصدار 1.0.0',
-            onTap: () => showAboutAppDialog(context),
           ),
           const SizedBox(height: 32),
           ElevatedButton.icon(

@@ -5,7 +5,6 @@ enum ChildStatus { absent, inMasged, left, vacation }
 class ChildModel {
   final String id;
   final String name;
-  final String level;
   final String group;
   final String? avatarUrl;
   final int attendancePercent;
@@ -36,7 +35,6 @@ class ChildModel {
   const ChildModel({
     required this.id,
     required this.name,
-    required this.level,
     required this.group,
     this.avatarUrl,
     required this.attendancePercent,
@@ -106,7 +104,6 @@ class ChildModel {
     return ChildModel(
       id: (json['id'] ?? '').toString(),
       name: json['name'] as String? ?? '',
-      level: json['level'] as String? ?? '',
       group: json['group'] as String? ?? '',
       avatarUrl: MediaUrlHelper.resolve(json['avatarUrl'] as String?),
       attendancePercent: json['attendancePercent'] as int? ?? 0,

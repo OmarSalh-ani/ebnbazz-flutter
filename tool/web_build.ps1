@@ -3,15 +3,16 @@
 $ErrorActionPreference = 'Stop'
 
 $projectRoot = Split-Path $PSScriptRoot -Parent
+$buildId = [DateTime]::UtcNow.ToString('o')
 Push-Location $projectRoot
 try {
     & "$PSScriptRoot\prepare_web_pubspec.ps1" -Action strip
     try {
-        flutter build web --release --pwa-strategy=none
+        flutter build web --release --pwa-strategy=none --dart-define=APP_BUILD_ID=$buildId
         if ($LASTEXITCODE -ne 0) {
             throw 'flutter build web failed for ParentApp'
         }
-        & "$PSScriptRoot\optimize_web_build.ps1"
+        & "$PSScriptRoot\optimize_web_build.ps1" -BuildId $buildId
     }
     finally {
         & "$PSScriptRoot\prepare_web_pubspec.ps1" -Action restore

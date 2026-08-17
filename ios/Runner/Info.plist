@@ -5,7 +5,7 @@
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
-		<string>مركز الأمام بن باز</string>
+		<string>مركز ابن باز</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>مركز الأمام بن باز</string>
+		<string>مركز ابن باز</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -52,7 +52,7 @@
 		<key>NSLocationAlwaysUsageDescription</key>
 		<string>يستخدم التطبيق موقعك للتأكد من وجودك في المسجد عند تسجيل الحضور، .</string>
 		<key>NSMicrophoneUsageDescription</key>
-		<string>يحتاج التطبيق إلى الميكروفون لمكالمات الفيديو مع المعلم وللأوامر الصوتية.</string>
+		<string>نستخدم الميكروفون أثناء مكالمات الفيديو مع المعلم، وللمعلّم عند إعطاء أوامر صوتية مثل تسجيل الحضور. لا يُستخدم الميكروفون في الخلفية.</string>
 		<key>NSSpeechRecognitionUsageDescription</key>
 		<string>يحتاج التطبيق إلى التعرف على الكلام لتنفيذ الأوامر الصوتية.</string>
 		<key>NSCameraUsageDescription</key>

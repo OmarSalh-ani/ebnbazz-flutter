@@ -8,6 +8,11 @@ class AppColors {
   static const Color primaryDark = Color(0xFF0B4E5D);
   static const Color primaryLight = Color(0xFFE6EFF0);
 
+  // Mrkz center theme (مركز ابن باز)
+  static const Color mrkzPrimary = Color(0xFFC9A227);
+  static const Color mrkzPrimaryDark = Color(0xFFA8861F);
+  static const Color mrkzPrimaryLight = Color(0xFFF5ECD8);
+
   // Gold/Accent (decorative elements)
   static const Color gold = Color(0xFFC9A96E);
   static const Color goldLight = Color(0xFFF5ECD8);

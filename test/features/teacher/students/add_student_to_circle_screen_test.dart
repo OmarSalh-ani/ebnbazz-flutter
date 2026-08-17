@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:masged_parent_app/app/providers/app_role_provider.dart';
-import 'package:masged_parent_app/features/children/models/student_plan_models.dart';
+import 'package:masged_parent_app/shared/models/paged_result.dart';
 import 'package:masged_parent_app/features/teacher/students/data/students_api.dart';
 import 'package:masged_parent_app/features/teacher/students/models/available_student.dart';
 import 'package:masged_parent_app/features/teacher/students/providers/students_providers.dart';

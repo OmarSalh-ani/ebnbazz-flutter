@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/theme/app_theme_extensions.dart';
 import 'package:masged_parent_app/teacher_core/network/api_exception.dart';
 import '../helpers/teacher_attendance_duration.dart';
 import '../models/teacher_attendance_models.dart';
@@ -60,7 +61,7 @@ class _TeacherAttendanceLogScreenState
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: AppColors.primary,
+              primary: this.context.appPrimary,
               onPrimary: Colors.white,
               surface: Colors.white,
               onSurface: AppColors.textPrimary,
@@ -186,7 +187,7 @@ class _TeacherAttendanceLogScreenState
                   child: Text(
                     'الشهر الحالي',
                     style: AppFonts.cairo(
-                      color: AppColors.primary,
+                      color: context.appPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -200,7 +201,7 @@ class _TeacherAttendanceLogScreenState
                   style: AppFonts.cairo(fontWeight: FontWeight.bold),
                 ),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: context.appPrimary,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 10,
@@ -225,9 +226,9 @@ class _TeacherAttendanceLogScreenState
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.06),
+          color: context.appPrimary.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+          border: Border.all(color: context.appPrimary.withValues(alpha: 0.15)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,10 +243,10 @@ class _TeacherAttendanceLogScreenState
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.calendar_today_rounded,
                   size: 16,
-                  color: AppColors.primary,
+                  color: context.appPrimary,
                 ),
                 const SizedBox(width: 6),
                 Expanded(
@@ -291,7 +292,7 @@ class _TeacherAttendanceLogScreenState
               child: Text(
                 'إعادة المحاولة',
                 style: AppFonts.cairo(
-                  color: AppColors.primary,
+                  color: context.appPrimary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -348,7 +349,7 @@ class _TeacherAttendanceLogScreenState
           _buildSummaryItem(
             label: 'أيام الحضور',
             value: '${summary.totalRecords}',
-            color: AppColors.primary,
+            color: context.appPrimary,
           ),
           _buildSummaryDivider(),
           _buildSummaryItem(
@@ -505,7 +506,7 @@ class _TeacherAttendanceLogScreenState
               showInProgress: !entry.isDeparted,
             ),
             icon: Icons.timelapse_rounded,
-            color: AppColors.primary,
+            color: context.appPrimary,
             showFullText: true,
           ),
         ],

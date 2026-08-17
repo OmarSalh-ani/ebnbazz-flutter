@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/theme/app_theme_extensions.dart';
 
 class PulsingMicButton extends StatefulWidget {
   const PulsingMicButton({
@@ -50,6 +49,8 @@ class _PulsingMicButtonState extends State<PulsingMicButton>
 
   @override
   Widget build(BuildContext context) {
+    final primary = context.appPrimary;
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -65,7 +66,7 @@ class _PulsingMicButtonState extends State<PulsingMicButton>
                 height: 110 * scale,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary.withValues(alpha: opacity),
+                  color: primary.withValues(alpha: opacity),
                 ),
               ),
             if (widget.isListening)
@@ -74,7 +75,7 @@ class _PulsingMicButtonState extends State<PulsingMicButton>
                 height: 90 * scale,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary.withValues(alpha: opacity + 0.1),
+                  color: primary.withValues(alpha: opacity + 0.1),
                 ),
               ),
             GestureDetector(
@@ -86,17 +87,17 @@ class _PulsingMicButtonState extends State<PulsingMicButton>
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: widget.isListening
-                        ? [AppColors.primary, Colors.redAccent]
+                        ? [primary, Colors.redAccent]
                         : [
-                            AppColors.primary,
-                            AppColors.primary.withValues(alpha: 0.8),
+                            primary,
+                            primary.withValues(alpha: 0.8),
                           ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.4),
+                      color: primary.withValues(alpha: 0.4),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),

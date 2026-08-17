@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../children/models/student_plan_models.dart';
+import 'package:masged_parent_app/shared/models/paged_result.dart';
 import '../../../memorizing_archive/models/memorizing_archive_item.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../data/memorizing_archive_api.dart';

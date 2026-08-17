@@ -5,13 +5,13 @@ import 'package:masged_parent_app/core/theme/app_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/theme/app_theme_extensions.dart';
 import '../../attendance/providers/attendance_providers.dart';
 import '../../attendance/screens/attendance_screen.dart';
 import '../../chat/screens/parent_chat_list_screen.dart';
 import '../../students/screens/add_student_to_circle_screen.dart';
 import '../../../../core/services/app_review_service.dart';
 import '../providers/dashboard_providers.dart';
-import '../providers/teacher_attendance_providers.dart';
 import '../providers/teacher_admin_notes_provider.dart';
 import '../screens/teacher_admin_notes_screen.dart';
 import '../tabs/teacher_dashboard_tabs.dart';
@@ -76,24 +76,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     });
   }
 
-  void _refreshMosqueProximityIfHomeVisible() {
-    if (_currentIndex == TeacherDashboardTab.home) {
-      ref.invalidate(mosqueProximityProvider);
-    }
-  }
-
-  Future<void> _openRouteAndRefreshHome(Widget screen) async {
+  Future<void> _openRoute(Widget screen) async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(builder: (_) => screen),
     );
-    _refreshMosqueProximityIfHomeVisible();
   }
 
   Widget _buildAdminNotesAction(int unreadCount) {
     final button = IconButton(
       icon: const Icon(Icons.campaign_outlined),
       tooltip: 'إشعارات الإدارة',
-      onPressed: () => _openRouteAndRefreshHome(
+      onPressed: () => _openRoute(
         const TeacherAdminNotesScreen(),
       ),
     );
@@ -133,7 +126,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               actions: [
                 IconButton(
                   icon: const Icon(Icons.chat_outlined),
-                  onPressed: () => _openRouteAndRefreshHome(
+                  onPressed: () => _openRoute(
                     const ParentChatListScreen(),
                   ),
                 ),
@@ -186,17 +179,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: (index) {
-            final wasOnHome = _currentIndex == TeacherDashboardTab.home;
             setState(() {
               _currentIndex = index;
             });
-            if (index == TeacherDashboardTab.home && wasOnHome) {
-              ref.invalidate(mosqueProximityProvider);
-            }
           },
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
-          selectedItemColor: AppColors.primary,
+          selectedItemColor: context.appPrimary,
           unselectedItemColor: AppColors.textSecondary.withValues(alpha: 0.6),
           selectedLabelStyle: AppFonts.cairo(
             fontWeight: FontWeight.bold,
@@ -252,13 +241,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ref.invalidate(attendanceStudentsProvider);
                     }
                   },
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: context.appPrimary,
                   elevation: 4,
                   child: const Icon(Icons.add, color: Colors.white, size: 28),
                 )
               : FloatingActionButton(
                   onPressed: () => showVoiceCommandBottomSheet(context),
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: context.appPrimary,
                   elevation: 4,
                   child: const Icon(Icons.mic, color: Colors.white, size: 28),
                 ),

@@ -1,12 +1,10 @@
 import 'dart:developer' as developer;
 import 'package:masged_parent_app/features/teacher/dashboard/models/dashboard_models.dart';
-import 'package:masged_parent_app/features/teacher/plans/models/student_plan_models.dart';
 
 enum VoiceCommandType {
   attendance,
   attendanceExcept,
   departure,
-  assignPlan,
   unrecognized,
 }
 
@@ -26,15 +24,6 @@ class VoiceCommandResult {
   final VoiceCommandType type;
   final String rawText;
   final String normalizedText;
-  
-  // Specific for assignPlan:
-  final String? studentName;
-  final String? startSurahName;
-  final int? startFromAyah;
-  final int? startToAyah;
-  final String? endSurahName;
-  final int? endFromAyah;
-  final int? endToAyah;
 
   /// Raw names blob after "ما عدا" / "إلا" (attendanceExcept).
   final String? excludedNamesBlob;
@@ -44,20 +33,13 @@ class VoiceCommandResult {
     required this.type,
     required this.rawText,
     required this.normalizedText,
-    this.studentName,
-    this.startSurahName,
-    this.startFromAyah,
-    this.startToAyah,
-    this.endSurahName,
-    this.endFromAyah,
-    this.endToAyah,
     this.excludedNamesBlob,
     this.excludedNamePhrases = const [],
   });
 
   @override
   String toString() {
-    return 'VoiceCommandResult(type: $type, student: $studentName, excluded: $excludedNamePhrases, startSurah: $startSurahName, startAyah: $startFromAyah-$startToAyah, endSurah: $endSurahName, endAyah: $endFromAyah-$endToAyah)';
+    return 'VoiceCommandResult(type: $type, excluded: $excludedNamePhrases)';
   }
 }
 
@@ -119,30 +101,21 @@ class VoiceCommandService {
       phrase: 'انصراف الطلاب',
       description: 'تسجيل انصراف جميع الطلاب',
     ),
-    VoiceCommandExample(
-      category: 'إنشاء خطة',
-      phrase:
-          'خطة لأحمد تبدأ من سورة البقرة الآية 1 للآية 5 وتنتهي بسورة النساء الآية 1 للآية 3',
-      description:
-          'إنشاء خطة حفظ للطالب من سورة البقرة (1–5) إلى سورة النساء (1–3)',
-    ),
   ];
 
   static String normalizeArabic(String text) {
-    var normalized = text.replaceAll(RegExp(r'[\u064B-\u0652]'), ''); // Remove diacritics
-    normalized = normalized.replaceAll(RegExp(r'[أإآ]'), 'ا'); // Unify Alef
-    normalized = normalized.replaceAll(RegExp(r'ة'), 'ه'); // Unify Teh Marbuta
-    normalized = normalized.replaceAll(RegExp(r'ى'), 'ي'); // Unify Ya
-    normalized = normalized.replaceAll(RegExp(r'\s+'), ' ').trim(); // Normalize whitespace
+    var normalized = text.replaceAll(RegExp(r'[\u064B-\u0652]'), '');
+    normalized = normalized.replaceAll(RegExp(r'[أإآ]'), 'ا');
+    normalized = normalized.replaceAll(RegExp(r'ة'), 'ه');
+    normalized = normalized.replaceAll(RegExp(r'ى'), 'ي');
+    normalized = normalized.replaceAll(RegExp(r'\s+'), ' ').trim();
     return normalized;
   }
 
-  /// Parses spoken Arabic text into a structured VoiceCommandResult.
   static VoiceCommandResult parseCommand(String text) {
     final normalized = normalizeArabic(text);
     developer.log('Parsing voice command. Raw: "$text", Normalized: "$normalized"');
 
-    // 1. Attendance for all except named students (must run before plain attendance)
     if (normalized.contains('تحضير') &&
         (normalized.contains('طلاب') ||
             normalized.contains('الطلاب') ||
@@ -171,53 +144,13 @@ class VoiceCommandService {
       );
     }
 
-    // 2. Check for bulk departure
-    if ((normalized.contains('صرف') || normalized.contains('انصراف')) && (normalized.contains('طلاب') || normalized.contains('الطلاب'))) {
+    if ((normalized.contains('صرف') || normalized.contains('انصراف')) &&
+        (normalized.contains('طلاب') || normalized.contains('الطلاب'))) {
       return VoiceCommandResult(
         type: VoiceCommandType.departure,
         rawText: text,
         normalizedText: normalized,
       );
-    }
-
-    // 3. Check for student plan
-    if (normalized.contains('خطه')) {
-      // Regex pattern to capture the parts:
-      // Group 1: Student Name
-      // Group 2: Start Surah
-      // Group 3: Start from Ayah
-      // Group 4: Start to Ayah
-      // Group 5: End Surah
-      // Group 6: End from Ayah
-      // Group 7: End to Ayah
-      final regex = RegExp(
-        r'خطه\s+(?:ل|لـ)?\s*(.*?)\s+تبدا\s+من\s+(?:سوره\s+)?(.*?)\s+(?:الايه|اية)\s+(\d+)\s+(?:للايه|الي\s+(?:الايه|اية)|الي)\s+(\d+)\s+(?:وتنتهي|تنتهي)\s+(?:بسوره|ب)?\s*(.*?)\s+(?:الايه|اية)\s+(\d+)\s+(?:للايه|الي\s+(?:الايه|اية)|الي)\s+(\d+)',
-        caseSensitive: false,
-      );
-
-      final match = regex.firstMatch(normalized);
-      if (match != null) {
-        final studentName = match.group(1)?.trim();
-        final startSurah = match.group(2)?.trim();
-        final startFrom = int.tryParse(match.group(3) ?? '');
-        final startTo = int.tryParse(match.group(4) ?? '');
-        final endSurah = match.group(5)?.trim();
-        final endFrom = int.tryParse(match.group(6) ?? '');
-        final endTo = int.tryParse(match.group(7) ?? '');
-
-        return VoiceCommandResult(
-          type: VoiceCommandType.assignPlan,
-          rawText: text,
-          normalizedText: normalized,
-          studentName: studentName,
-          startSurahName: startSurah,
-          startFromAyah: startFrom,
-          startToAyah: startTo,
-          endSurahName: endSurah,
-          endFromAyah: endFrom,
-          endToAyah: endTo,
-        );
-      }
     }
 
     return VoiceCommandResult(
@@ -227,7 +160,6 @@ class VoiceCommandService {
     );
   }
 
-  /// Splits the spoken names section after "ما عدا" into individual name phrases.
   static List<String> splitExcludedNamePhrases(String blob) {
     var normalized = normalizeArabic(blob).trim();
     if (normalized.isEmpty) return [];
@@ -242,7 +174,6 @@ class VoiceCommandService {
         .toList();
   }
 
-  /// Resolves which students should stay absent (excluded from bulk attendance).
   static AttendanceExceptResolution resolveExcludedStudents(
     List<StudentListItem> students, {
     required String namesBlob,
@@ -308,7 +239,6 @@ class VoiceCommandService {
     );
   }
 
-  /// Similar students to pick as absent when speech names are unclear.
   static List<StudentMatchCandidate> suggestAbsentStudents(
     List<StudentListItem> students,
     List<String> unmatchedPhrases,
@@ -347,7 +277,6 @@ class VoiceCommandService {
     return suggestions;
   }
 
-  /// Ranked student match for voice disambiguation.
   static List<StudentMatchCandidate> findStudentCandidates(
     List<StudentListItem> students,
     String spokenName, {
@@ -410,7 +339,6 @@ class VoiceCommandService {
     return unique;
   }
 
-  /// True when a single student can be shown for confirmation without picking.
   static bool isConfidentSingleMatch(List<StudentMatchCandidate> candidates) {
     if (candidates.isEmpty) return false;
     if (candidates.first.isExact) return true;
@@ -418,7 +346,6 @@ class VoiceCommandService {
     return candidates[0].score > candidates[1].score;
   }
 
-  /// Finds the best student match, if confident enough.
   static StudentListItem? findStudent(
     List<StudentListItem> students,
     String spokenName,
@@ -431,7 +358,6 @@ class VoiceCommandService {
     return null;
   }
 
-  /// Human-readable Arabic summary for confirmation UI.
   static String describeCommand(
     VoiceCommandResult parsed, {
     int? studentCount,
@@ -464,62 +390,8 @@ class VoiceCommandService {
         return count > 0
             ? 'تسجيل انصراف جميع الطلاب ($count طالب)'
             : 'تسجيل انصراف جميع الطلاب';
-      case VoiceCommandType.assignPlan:
-        final studentLabel =
-            resolvedStudentName ?? parsed.studentName ?? 'طالب';
-        final start = parsed.startSurahName ?? '—';
-        final end = parsed.endSurahName ?? '—';
-        final startAyah =
-            '${parsed.startFromAyah ?? 1}–${parsed.startToAyah ?? 1}';
-        final endAyah = '${parsed.endFromAyah ?? 1}–${parsed.endToAyah ?? 1}';
-        return 'إنشاء خطة لـ $studentLabel\n'
-            'من سورة $start (آية $startAyah)\n'
-            'إلى سورة $end (آية $endAyah)';
       case VoiceCommandType.unrecognized:
         return 'أمر غير معروف';
     }
-  }
-
-  /// Maps a spoken Surah name to a valid database PlanSurahOption.
-  static PlanSurahOption? matchSurah(List<PlanSurahOption> surahs, String spokenSurahName) {
-    final normSpoken = normalizeArabic(spokenSurahName).trim();
-    if (normSpoken.isEmpty) return null;
-
-    // 1. Try exact normalized match
-    for (final surah in surahs) {
-      final normName = normalizeArabic(surah.name).trim();
-      if (normName == normSpoken) {
-        return surah;
-      }
-    }
-
-    // Helper to strip "ال" prefix
-    String stripAl(String s) {
-      if (s.startsWith('ال')) {
-        return s.substring(2);
-      }
-      return s;
-    }
-
-    final strippedSpoken = stripAl(normSpoken);
-
-    // 2. Try match after removing "ال" prefix from either
-    for (final surah in surahs) {
-      final normName = normalizeArabic(surah.name).trim();
-      final strippedName = stripAl(normName);
-      if (strippedName == strippedSpoken) {
-        return surah;
-      }
-    }
-
-    // 3. Try containment match
-    for (final surah in surahs) {
-      final normName = normalizeArabic(surah.name).trim();
-      if (normName.contains(normSpoken) || normSpoken.contains(normName)) {
-        return surah;
-      }
-    }
-
-    return null;
   }
 }

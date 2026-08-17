@@ -24,14 +24,19 @@ class AppTheme {
     );
   }
 
-  static ThemeData get lightTheme {
+  static ThemeData _buildTheme({
+    required Color primary,
+    required Color primaryDark,
+    required Color primaryLight,
+  }) {
     final cairoTextTheme = _cairoTextTheme();
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        primary: AppColors.primary,
+        seedColor: primary,
+        primary: primary,
+        primaryContainer: primaryLight,
         secondary: AppColors.gold,
         background: AppColors.background,
         surface: AppColors.surface,
@@ -91,7 +96,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          borderSide: BorderSide(color: primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -110,7 +115,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: primary,
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 54),
           shape: RoundedRectangleBorder(
@@ -125,8 +130,8 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          side: const BorderSide(color: AppColors.primary, width: 1.5),
+          foregroundColor: primary,
+          side: BorderSide(color: primary, width: 1.5),
           minimumSize: const Size(double.infinity, 54),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -162,17 +167,17 @@ class AppTheme {
         color: AppColors.border,
         thickness: 1,
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        selectedItemColor: AppColors.primary,
+        selectedItemColor: primary,
         unselectedItemColor: AppColors.textHint,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.primaryLight,
+        backgroundColor: primaryLight,
         labelStyle: _cairo(
-          color: AppColors.primary,
+          color: primary,
           fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
@@ -181,6 +186,22 @@ class AppTheme {
           borderRadius: BorderRadius.circular(20),
         ),
       ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: primary,
+        foregroundColor: Colors.white,
+      ),
     );
   }
+
+  static ThemeData get lightTheme => _buildTheme(
+        primary: AppColors.primary,
+        primaryDark: AppColors.primaryDark,
+        primaryLight: AppColors.primaryLight,
+      );
+
+  static ThemeData get mrkzTheme => _buildTheme(
+        primary: AppColors.mrkzPrimary,
+        primaryDark: AppColors.mrkzPrimaryDark,
+        primaryLight: AppColors.mrkzPrimaryLight,
+      );
 }

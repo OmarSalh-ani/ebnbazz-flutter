@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/adhkar_category.dart';
 import '../models/adhkar_category_summary.dart';
 import '../services/adhkar_api_service.dart';
-import '../../children/models/student_plan_models.dart';
+import 'package:masged_parent_app/shared/models/paged_result.dart';
 
 final adhkarApiServiceProvider = Provider<AdhkarApiService>((ref) {
   return AdhkarApiService();

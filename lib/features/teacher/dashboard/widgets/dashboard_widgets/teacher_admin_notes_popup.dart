@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:masged_parent_app/core/theme/app_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/theme/app_theme_extensions.dart';
 import '../../data/teacher_admin_notes_api.dart';
 import '../../providers/dashboard_providers.dart';
 import '../../providers/teacher_admin_notes_provider.dart';
@@ -135,9 +136,9 @@ class _TeacherAdminNotesPopupDialogState
             child: FilledButton(
               onPressed: canClose ? _handleClose : null,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: context.appPrimary,
                 disabledBackgroundColor:
-                    AppColors.primary.withValues(alpha: 0.45),
+                    context.appPrimary.withValues(alpha: 0.45),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

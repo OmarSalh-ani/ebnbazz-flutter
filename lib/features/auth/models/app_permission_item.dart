@@ -40,20 +40,22 @@ const appPermissionItems = <AppPermissionItem>[
     id: 'microphone',
     title: 'صلاحية الميكروفون',
     description:
-        'يستخدم التطبيق المايكروفون لمكالمات الفيديو مع المعلم عند الموافقة، '
-        'وللمعلّم أيضاً للأوامر الصوتية مثل تحضير الطلاب وتسجيل الانصراف وإعداد خطط الحفظ.',
+        'يُطلب الميكروفون فقط عند بدء مكالمة فيديو أو استخدام الأوامر الصوتية. '
+        'يمكنك رفض الطلب ومتابعة استخدام باقي التطبيق.',
     icon: Icons.mic_rounded,
     permission: Permission.microphone,
+    optional: true,
     applicableRoles: {AppRole.parent, AppRole.teacher},
   ),
   AppPermissionItem(
     id: 'camera',
     title: 'صلاحية الكاميرا',
     description:
-        'يستخدم التطبيق الكاميرا لمكالمات الفيديو مع المعلم، وللمعلّم أيضاً '
-        'لمسح رمز QR عند تسجيل حضور الطلاب والتحقق السريع من هوية الطالب داخل الحلقة.',
+        'تُطلب الكاميرا فقط عند بدء مكالمة فيديو أو مسح رمز QR. '
+        'يمكنك رفض الطلب ومتابعة استخدام باقي التطبيق.',
     icon: Icons.videocam_rounded,
     permission: Permission.camera,
+    optional: true,
     applicableRoles: {AppRole.parent, AppRole.teacher},
   ),
   AppPermissionItem(

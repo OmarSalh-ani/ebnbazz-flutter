@@ -48,21 +48,6 @@ class TeacherAttendanceApi {
     );
   }
 
-  Future<MosqueProximity> getProximity({
-    required double latitude,
-    required double longitude,
-  }) {
-    return _client.get<MosqueProximity>(
-      '/api/TeacherAttendance/proximity',
-      queryParameters: {
-        'latitude': latitude,
-        'longitude': longitude,
-      },
-      parseData: (json) =>
-          MosqueProximity.fromJson(json as Map<String, dynamic>),
-    );
-  }
-
   Future<TeacherAttendanceLogResponse> getAttendanceLog({
     required String fromDate,
     required String toDate,

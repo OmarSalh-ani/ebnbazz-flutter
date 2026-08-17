@@ -615,8 +615,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                   ),
-                  Text(
-                    child.level,
+                  if (child.group.isNotEmpty)
+                    Text(
+                      child.group,
                     style: AppFonts.cairo(
                       color: AppColors.textSecondary,
                       fontSize: 13,

@@ -5,6 +5,7 @@ import 'package:masged_parent_app/core/theme/app_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/theme/app_theme_extensions.dart';
 import 'package:masged_parent_app/teacher_core/network/api_exception.dart';
 import '../../shared/models/selectable_student_row.dart';
 import '../../shared/widgets/selectable_students_list.dart';
@@ -99,7 +100,7 @@ class _AddStudentToCircleScreenState
               'حسناً',
               style: AppFonts.cairo(
                 fontWeight: FontWeight.bold,
-                color: AppColors.primary,
+                color: context.appPrimary,
               ),
             ),
           ),
@@ -164,7 +165,7 @@ class _AddStudentToCircleScreenState
                     'إضافة للحلقة',
                     style: AppFonts.cairo(
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+                      color: context.appPrimary,
                     ),
                   ),
           ),

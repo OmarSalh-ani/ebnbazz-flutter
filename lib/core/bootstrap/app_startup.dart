@@ -5,12 +5,14 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import '../../features/quran/helpers/hive_helper.dart';
 import '../../features/quran/helpers/initializeData.dart';
+import '../web/web_app_update.dart';
 
 /// Runs non-critical startup work after [runApp] on web so the first frame
 /// is not blocked by locale data.
 /// Quran Hive settings are mobile-only (reader is disabled on web).
 Future<void> runDeferredWebStartup() async {
   unawaited(initializeDateFormatting('ar', null));
+  startWebAppUpdateWatcher();
 }
 
 Future<void> configureWebPlatform() async {

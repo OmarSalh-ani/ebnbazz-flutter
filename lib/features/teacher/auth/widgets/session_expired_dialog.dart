@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/theme/app_theme_extensions.dart';
 import 'package:masged_parent_app/shared/router/app_routes.dart';
 import '../providers/auth_providers.dart';
 
@@ -46,7 +47,7 @@ Future<void> showTeacherSessionExpiredDialog(
             'موافق',
             style: AppFonts.cairo(
               fontWeight: FontWeight.bold,
-              color: AppColors.primary,
+              color: dialogContext.appPrimary,
             ),
           ),
         ),

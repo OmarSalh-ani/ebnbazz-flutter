@@ -25,6 +25,11 @@ class AppPermissionHelper {
     }
   }
 
+  /// Requests the system permission dialog when it can still be shown.
+  ///
+  /// Never opens Settings. If the user already denied the system prompt,
+  /// returns the current status so the caller can explain and optionally
+  /// offer a Settings link.
   static Future<PermissionStatus> requestFor(AppPermissionItem item) async {
     if (item.permission == null) return PermissionStatus.denied;
 
@@ -33,11 +38,24 @@ class AppPermissionHelper {
     }
 
     try {
-      return await item.permission!.request();
+      return await requestRuntime(item.permission!);
     } catch (_) {
       return PermissionStatus.denied;
     }
   }
+
+  static Future<PermissionStatus> requestRuntime(Permission permission) async {
+    final current = await permission.status;
+    if (current.isGranted || current.isLimited) return current;
+    if (current.isPermanentlyDenied || current.isRestricted) return current;
+    return permission.request();
+  }
+
+  static bool canUse(PermissionStatus status) =>
+      status.isGranted || status.isLimited;
+
+  static bool needsSettings(PermissionStatus status) =>
+      status.isPermanentlyDenied || status.isRestricted;
 
   static PermissionStatus _fromGeolocator(LocationPermission permission) {
     switch (permission) {

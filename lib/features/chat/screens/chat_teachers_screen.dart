@@ -122,7 +122,6 @@ class ChatTeachersScreen extends ConsumerWidget {
       selected = ChildModel(
         id: '${thread.studentId}',
         name: thread.studentName,
-        level: '',
         group: thread.subtitle,
         attendancePercent: 0,
         nextSession: '',

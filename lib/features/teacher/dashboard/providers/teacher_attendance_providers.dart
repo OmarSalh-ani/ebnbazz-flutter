@@ -39,11 +39,6 @@ final teacherAttendanceStatusProvider =
   return ref.watch(teacherAttendanceRepositoryProvider).getStatus();
 });
 
-final mosqueProximityProvider =
-    FutureProvider.autoDispose<MosqueProximity>((ref) {
-  return ref.watch(teacherAttendanceRepositoryProvider).getMosqueProximity();
-});
-
 final teacherAttendanceLogProvider = FutureProvider.autoDispose
     .family<TeacherAttendanceLogResponse, TeacherAttendanceLogQuery>((ref, query) {
   return ref.watch(teacherAttendanceRepositoryProvider).getAttendanceLog(

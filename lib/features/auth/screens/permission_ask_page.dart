@@ -55,20 +55,26 @@ class _PermissionAskPageState extends ConsumerState<PermissionAskPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _refreshStatuses());
   }
 
-  Future<void> _finish() async {
+  Future<void> _finish({bool requestPermissions = true}) async {
     if (_isRequesting) return;
 
     setState(() => _isRequesting = true);
     try {
-      for (final item in _visibleItems) {
-        if (item.permission == null) continue;
+      if (requestPermissions) {
+        for (final item in _visibleItems) {
+          // Camera and microphone are requested only when a feature needs them
+          // (video call / voice commands), so the system dialog is shown in
+          // context instead of sending the user to Settings first.
+          if (item.permission == null || item.optional) continue;
 
-        var status = await AppPermissionHelper.statusFor(item);
-        if (!status.isGranted && !status.isLimited) {
-          status = await AppPermissionHelper.requestFor(item);
-        }
-        if (mounted) {
-          setState(() => _statusById[item.id] = status);
+          var status = await AppPermissionHelper.statusFor(item);
+          if (!AppPermissionHelper.canUse(status) &&
+              !AppPermissionHelper.needsSettings(status)) {
+            status = await AppPermissionHelper.requestFor(item);
+          }
+          if (mounted) {
+            setState(() => _statusById[item.id] = status);
+          }
         }
       }
 
@@ -204,8 +210,9 @@ class _PermissionAskPageState extends ConsumerState<PermissionAskPage> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'عند الضغط على «السماح والمتابعة» ستظهر لك نوافذ النظام '
-              'لطلب كل صلاحية مع توضيح سبب استخدامها.',
+              'يمكنك المتابعة دون منح أي صلاحية. '
+              'الميكروفون والكاميرا يُطلبان فقط عند استخدام مكالمة فيديو أو الأوامر الصوتية، '
+              'عبر نافذة النظام وليس من الإعدادات.',
               style: AppFonts.cairo(
                 fontSize: 13,
                 height: 1.55,
@@ -276,11 +283,29 @@ class _PermissionAskPageState extends ConsumerState<PermissionAskPage> {
           ),
         ],
       ),
-      child: CustomButton(
-        text: 'السماح والمتابعة',
-        icon: Icons.check_circle_outline_rounded,
-        isLoading: _isRequesting,
-        onPressed: _finish,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CustomButton(
+            text: 'متابعة',
+            icon: Icons.arrow_forward_rounded,
+            isLoading: _isRequesting,
+            onPressed: () => _finish(),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: _isRequesting
+                ? null
+                : () => _finish(requestPermissions: false),
+            child: Text(
+              'تخطي',
+              style: AppFonts.cairo(
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -380,7 +405,9 @@ class _PermissionCard extends StatelessWidget {
             _buildStatusChip(
               isGranted: isGranted,
               isDeniedForever: isDeniedForever,
-              customLabel: hasRuntimePermission ? null : 'تُطلب عند الاستخدام',
+              customLabel: !hasRuntimePermission || item.optional
+                  ? 'تُطلب عند الاستخدام'
+                  : null,
             ),
           ],
         ),

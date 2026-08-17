@@ -9,7 +9,6 @@ import '../models/child_model.dart';
 import '../providers/student_profile_provider.dart';
 import 'edit_child_profile_screen.dart';
 import 'parent_memorizing_archive_screen.dart';
-import '../widgets/child_plan_table_section.dart';
 
 class ChildProfileScreen extends ConsumerWidget {
   final ChildModel child;
@@ -121,10 +120,6 @@ class ChildProfileScreen extends ConsumerWidget {
         child: Column(
           children: [
             _buildProfileHeader(profile),
-            const SizedBox(height: 32),
-            _buildSectionTitle('جدول الخطة', Icons.table_chart_rounded),
-            const SizedBox(height: 12),
-            ChildPlanTableSection(studentId: profile.id),
             const SizedBox(height: 32),
             _buildMemorizingArchiveSection(context, profile),
             const SizedBox(height: 32),
@@ -280,8 +275,6 @@ class ChildProfileScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           _buildInfoRow('تاريخ الميلاد:', _formatBirthDate(profile.birthDate), Icons.cake_rounded),
-          const SizedBox(height: 12),
-          _buildInfoRow('المستوى:', profile.level, Icons.school_rounded),
           const SizedBox(height: 12),
           _buildInfoRow('المجموعة:', profile.group, Icons.groups_rounded),
         ],

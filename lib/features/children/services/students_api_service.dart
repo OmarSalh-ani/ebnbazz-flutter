@@ -3,10 +3,9 @@ import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/platform/picked_student_photo.dart';
+import '../../../shared/models/paged_result.dart';
 import '../../memorizing_archive/models/memorizing_archive_item.dart';
 import '../models/child_model.dart';
-import '../models/student_plan_models.dart';
-import '../models/student_quran_assignment.dart';
 
 class StudentsApiService {
   final Dio _dio = ApiClient.instance.dio;
@@ -77,33 +76,6 @@ class StudentsApiService {
     }
   }
 
-  /// Current memorize/revise plan from teacher for this student.
-  Future<StudentQuranAssignment> getQuranAssignment(String studentId) async {
-    try {
-      final response =
-          await _dio.get('/api/students/$studentId/quran-assignment');
-      return StudentQuranAssignment.fromJson(
-        response.data as Map<String, dynamic>,
-      );
-    } on DioException catch (e) {
-      if (e.error is ApiException) throw e.error as ApiException;
-      throw ApiException('تعذر تحميل خطة التسميع');
-    }
-  }
-
-  Future<ParentPlanOverview> getPlanOverview(String studentId) async {
-    try {
-      final response =
-          await _dio.get('/api/students/$studentId/plan-overview');
-      return ParentPlanOverview.fromJson(
-        response.data as Map<String, dynamic>,
-      );
-    } on DioException catch (e) {
-      if (e.error is ApiException) throw e.error as ApiException;
-      throw ApiException('تعذر تحميل ملخص الخطة');
-    }
-  }
-
   Future<PagedResult<MemorizingArchiveItem>> getMemorizingArchive(
     String studentId, {
     required int page,
@@ -127,31 +99,6 @@ class StudentsApiService {
     } on DioException catch (e) {
       if (e.error is ApiException) throw e.error as ApiException;
       throw ApiException('تعذر تحميل أرشيف الحفظ');
-    }
-  }
-
-  Future<PagedResult<ParentPlanRow>> getPlanRows(
-    String studentId, {
-    required String planType,
-    required int page,
-    int pageSize = 10,
-  }) async {
-    try {
-      final response = await _dio.get(
-        '/api/students/$studentId/plan-rows',
-        queryParameters: {
-          'planType': planType,
-          'page': page,
-          'pageSize': pageSize,
-        },
-      );
-      return PagedResult.fromJson(
-        response.data as Map<String, dynamic>,
-        ParentPlanRow.fromJson,
-      );
-    } on DioException catch (e) {
-      if (e.error is ApiException) throw e.error as ApiException;
-      throw ApiException('تعذر تحميل صفوف الخطة');
     }
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/theme/app_theme_extensions.dart';
 import 'package:masged_parent_app/shared/widgets/custom_button.dart';
 import 'package:masged_parent_app/shared/widgets/custom_text_field.dart';
 import '../../shared/models/selectable_student_row.dart';
@@ -206,7 +207,7 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
                 title: Text('إرسال واتساب للطلاب المحددين',
                     style: AppFonts.cairo()),
                 value: _sendWhatsApp,
-                activeThumbColor: AppColors.primary,
+                activeThumbColor: context.appPrimary,
                 onChanged: (v) => setState(() => _sendWhatsApp = v),
               ),
               CustomButton(

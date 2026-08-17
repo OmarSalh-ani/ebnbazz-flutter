@@ -7,6 +7,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:masged_parent_app/teacher_core/network/api_exception.dart';
 import 'package:masged_parent_app/teacher_core/services/location_service.dart';
 import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/theme/app_theme_extensions.dart';
 import '../../dashboard/models/dashboard_models.dart';
 import '../../dashboard/providers/dashboard_providers.dart';
 import '../providers/attendance_providers.dart';
@@ -166,7 +167,6 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen>
       name: result.studentName,
       age: 0,
       group: '',
-      planLevelName: '',
       isPresentToday: '',
       departureStatusToday: '',
       departureTimeToday: '',
@@ -269,7 +269,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen>
                         'حفظ',
                         style: AppFonts.cairo(
                           fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
+                          color: context.appPrimary,
                         ),
                       ),
               );
@@ -436,7 +436,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primary : Colors.transparent,
+          color: isActive ? context.appPrimary : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         alignment: Alignment.center,
@@ -558,11 +558,11 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen>
   Widget _buildStudentAvatar(StudentListItem student, {required double radius}) {
     return CircleAvatar(
       radius: radius,
-      backgroundColor: AppColors.primaryLight,
+      backgroundColor: context.appPrimaryLight,
       backgroundImage:
           student.imageUrl != null ? NetworkImage(student.imageUrl!) : null,
       child: student.imageUrl == null
-          ? Icon(Icons.person, color: AppColors.primary, size: radius)
+          ? Icon(Icons.person, color: context.appPrimary, size: radius)
           : null,
     );
   }

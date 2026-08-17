@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:masged_parent_app/core/theme/app_fonts.dart';
-
 import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/theme/app_theme_extensions.dart';
 import '../../models/dashboard_models.dart';
 import 'legend_dot.dart';
 
@@ -17,6 +17,7 @@ class AttendanceOverviewBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = context.appPrimary;
     final total = stats.totalStudents;
     final presentFlex = stats.presentStudents.clamp(0, total);
     final absentFlex = stats.absentStudents.clamp(0, total);
@@ -28,15 +29,15 @@ class AttendanceOverviewBar extends StatelessWidget {
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
           colors: [
-            AppColors.primary.withValues(alpha: 0.08),
+            primary.withValues(alpha: 0.08),
             Colors.white,
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.12)),
+        border: Border.all(color: primary.withValues(alpha: 0.12)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.06),
+            color: primary.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -50,7 +51,9 @@ class AttendanceOverviewBar extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
+                  gradient: LinearGradient(
+                    colors: [primary, primary.withValues(alpha: 0.8)],
+                  ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -87,7 +90,7 @@ class AttendanceOverviewBar extends StatelessWidget {
                 style: AppFonts.cairo(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+                  color: primary,
                 ),
               ),
             ],

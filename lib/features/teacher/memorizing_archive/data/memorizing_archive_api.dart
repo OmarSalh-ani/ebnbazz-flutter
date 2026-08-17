@@ -1,6 +1,6 @@
 import 'package:masged_parent_app/teacher_core/network/api_client.dart';
 
-import '../../../children/models/student_plan_models.dart';
+import 'package:masged_parent_app/shared/models/paged_result.dart';
 import '../../../memorizing_archive/models/memorizing_archive_item.dart';
 
 class MemorizingArchiveApi {

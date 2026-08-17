@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:masged_parent_app/core/theme/app_fonts.dart';
 
 import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/theme/app_theme_extensions.dart';
 
 Future<String?> showDeviceReEnrollmentDialog(BuildContext context) {
   final passwordController = TextEditingController();
@@ -82,7 +83,7 @@ Future<String?> showDeviceReEnrollmentDialog(BuildContext context) {
               'تأكيد',
               style: AppFonts.cairo(
                 fontWeight: FontWeight.bold,
-                color: AppColors.primary,
+                color: context.appPrimary,
               ),
             ),
           ),

@@ -21,7 +21,9 @@ final attendanceRepositoryProvider = Provider<AttendanceRepository>((ref) {
 
 final attendanceStudentsProvider =
     FutureProvider.autoDispose<List<StudentListItem>>((ref) {
-  return ref.watch(attendanceRepositoryProvider).loadStudents();
+  ref.watch(teacherIsMrkzProvider);
+  final isMrkz = ref.read(teacherIsMrkzProvider);
+  return ref.watch(attendanceRepositoryProvider).loadStudents(isMrkz: isMrkz);
 });
 
 final attendanceControllerProvider = Provider<AttendanceController>((ref) {

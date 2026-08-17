@@ -6,7 +6,7 @@ import 'package:intl/intl.dart' as intl;
 import 'package:masged_parent_app/core/theme/app_fonts.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../children/models/student_plan_models.dart';
+import 'package:masged_parent_app/shared/models/paged_result.dart';
 import '../models/memorizing_archive_item.dart';
 
 typedef MemorizingArchiveLoader = Future<PagedResult<MemorizingArchiveItem>>

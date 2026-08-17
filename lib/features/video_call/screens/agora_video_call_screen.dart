@@ -13,6 +13,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/app_permission_helper.dart';
 import '../config/agora_config.dart';
 import '../models/video_call_participant.dart';
 import '../models/video_call_session.dart';
@@ -53,6 +54,7 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
   final Set<int> _remoteUids = {};
   bool _initializing = true;
   String? _error;
+  bool _permissionNeedsSettings = false;
   bool _joined = false;
 
   bool _localVideoEnabled = true;
@@ -230,13 +232,18 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
   }
 
   Future<void> _bootstrap() async {
-    final cam = await Permission.camera.request();
-    final mic = await Permission.microphone.request();
-    if (!cam.isGranted || !mic.isGranted) {
+    final cam = await AppPermissionHelper.requestRuntime(Permission.camera);
+    final mic = await AppPermissionHelper.requestRuntime(Permission.microphone);
+    if (!AppPermissionHelper.canUse(cam) || !AppPermissionHelper.canUse(mic)) {
       if (mounted) {
         setState(() {
           _initializing = false;
-          _error = 'يلزم السماح بالكاميرا والميكروفون لإكمال المكالمة.';
+          _permissionNeedsSettings =
+              AppPermissionHelper.needsSettings(cam) ||
+              AppPermissionHelper.needsSettings(mic);
+          _error = _permissionNeedsSettings
+              ? 'تم رفض الكاميرا أو الميكروفون سابقاً. فعّلهما من الإعدادات لإكمال المكالمة.'
+              : 'يلزم السماح بالكاميرا والميكروفون لإكمال المكالمة. سيظهر طلب النظام عند المحاولة.';
         });
       }
       return;
@@ -848,7 +855,8 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
         child: Builder(
           builder: (context) {
             if (_error != null) {
-              final isPermissionError = _error!.contains('الكاميرا والميكروفون');
+              final isPermissionError = _error!.contains('الكاميرا') ||
+                  _error!.contains('الميكروفون');
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -860,8 +868,27 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
                         textAlign: TextAlign.center,
                         style: AppFonts.cairo(color: Colors.white70),
                       ),
-                      if (isPermissionError) ...[
-                        const SizedBox(height: 20),
+                      const SizedBox(height: 20),
+                      if (isPermissionError && !_permissionNeedsSettings)
+                        TextButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _error = null;
+                              _initializing = true;
+                              _permissionNeedsSettings = false;
+                            });
+                            unawaited(_bootstrap());
+                          },
+                          icon: const Icon(Icons.refresh, color: Colors.white70),
+                          label: Text(
+                            'المحاولة مرة أخرى',
+                            style: AppFonts.cairo(
+                              color: Colors.white70,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      if (isPermissionError && _permissionNeedsSettings)
                         TextButton.icon(
                           onPressed: openAppSettings,
                           icon: const Icon(Icons.settings_outlined, color: Colors.white70),
@@ -873,7 +900,6 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
                             ),
                           ),
                         ),
-                      ],
                     ],
                   ),
                 ),

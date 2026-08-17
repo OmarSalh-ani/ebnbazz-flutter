@@ -68,6 +68,7 @@ class AvailableStudentsController
   @override
   Future<AvailableStudentsPageState> build() async {
     final search = ref.watch(availableStudentsSearchProvider);
+    ref.watch(teacherIsMrkzProvider);
     return _fetchPage(search: search, page: 1);
   }
 
@@ -78,10 +79,12 @@ class AvailableStudentsController
     state = AsyncData(current.copyWith(isLoadingMore: true));
 
     try {
+      final isMrkz = ref.read(teacherIsMrkzProvider);
       final nextPage = await ref.read(studentsApiProvider).getAvailableStudents(
             searchTerm: current.search.isEmpty ? null : current.search,
             page: current.page + 1,
             pageSize: availableStudentsPageSize,
+            isMrkz: isMrkz,
           );
 
       final previous = state.valueOrNull ?? current;
@@ -102,10 +105,12 @@ class AvailableStudentsController
     required String search,
     required int page,
   }) async {
+    final isMrkz = ref.read(teacherIsMrkzProvider);
     final result = await ref.read(studentsApiProvider).getAvailableStudents(
           searchTerm: search.isEmpty ? null : search,
           page: page,
           pageSize: availableStudentsPageSize,
+          isMrkz: isMrkz,
         );
 
     return AvailableStudentsPageState(

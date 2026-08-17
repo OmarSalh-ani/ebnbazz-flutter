@@ -64,7 +64,6 @@ class StudentListItem {
     required this.name,
     required this.age,
     required this.group,
-    required this.planLevelName,
     required this.isPresentToday,
     required this.departureStatusToday,
     required this.departureTimeToday,
@@ -82,7 +81,6 @@ class StudentListItem {
   final String name;
   final int age;
   final String group;
-  final String planLevelName;
   final String isPresentToday;
   final String departureStatusToday;
   final String departureTimeToday;
@@ -95,7 +93,6 @@ class StudentListItem {
   final int warningCount;
   final int parentQuestionsCount;
 
-  /// Badge text for today's attendance (includes departure time when applicable).
   String get todayStatusLabel {
     if (isPresentToday == 'منصرف') {
       if (departureTimeToday.isNotEmpty) {
@@ -115,7 +112,6 @@ class StudentListItem {
       name: json['name'] as String? ?? '',
       age: json['age'] as int? ?? 0,
       group: json['group'] as String? ?? '',
-      planLevelName: json['planLevelName'] as String? ?? '',
       isPresentToday: json['isPresentToday'] as String? ?? '',
       departureStatusToday: json['departureStatusToday'] as String? ?? '',
       departureTimeToday: json['departureTimeToday'] as String? ?? '',
@@ -129,4 +125,6 @@ class StudentListItem {
       parentQuestionsCount: json['parentQuestionsCount'] as int? ?? 0,
     );
   }
+
+  String listSubtitle({required bool isMrkz}) => group;
 }

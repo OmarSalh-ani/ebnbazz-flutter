@@ -1,8 +1,8 @@
 class AppConstants {
   AppConstants._();
 
-  static const String appName = 'مركز الأمام بن باز';
-  static const String appNameFull = 'مركز الامام عبد العزيز بن باز للعلوم الشرعية عبدالله المبارك الصباح';
+  static const String appName = 'مركز ابن باز';
+  static const String appNameFull = 'مركز الامام عبد العزيز بن باز للعلوم الشرعية ';
   static const String appSubtitle = 'بإشراف مركز الامام عبد العزيز بن باز للعلوم الشرعية';
 
   // Kuwait dial code

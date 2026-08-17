@@ -3,8 +3,6 @@ import 'package:masged_parent_app/core/theme/app_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:masged_parent_app/core/theme/app_colors.dart';
-import '../../../plans/screens/bulk_plan_assignment_screen.dart';
-import '../../../plans/screens/plan_levels_screen.dart';
 import '../../models/dashboard_models.dart';
 import '../../providers/dashboard_providers.dart';
 import 'empty_students.dart';
@@ -71,42 +69,6 @@ class StudentsTab extends ConsumerWidget {
                       color: AppColors.textPrimary,
                     ),
                   ),
-                ),
-                if (data!.students.isNotEmpty)
-                  TextButton.icon(
-                    onPressed: () async {
-                      final saved = await Navigator.push<bool>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => BulkPlanAssignmentScreen(
-                            students: data!.students,
-                          ),
-                        ),
-                      );
-                      if (saved == true && context.mounted) {
-                        ref.read(dashboardPageProvider.notifier).refresh();
-                      }
-                    },
-                    icon: const Icon(Icons.group_add_rounded, size: 20),
-                    label: Text(
-                      'خطة جماعية',
-                      style: AppFonts.cairo(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                IconButton(
-                  tooltip: 'مستويات الخطة',
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const PlanLevelsScreen(),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.tune_rounded),
                 ),
               ],
             ),

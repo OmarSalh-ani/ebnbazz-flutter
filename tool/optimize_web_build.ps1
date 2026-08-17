@@ -2,6 +2,12 @@
 # - Removes QCF fonts from FontManifest.json
 # - Deletes bundled v2woff font files (~100MB)
 # - Removes Quran-only assets not used on web
+# - Writes version.json and injects app-build-id into index.html
+
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$BuildId
+)
 
 $ErrorActionPreference = 'Stop'
 
@@ -11,6 +17,33 @@ $assetsRoot = Join-Path $webRoot 'assets'
 if (-not (Test-Path $webRoot)) {
     Write-Warning "Web build output not found at $webRoot — skipping."
     exit 0
+}
+
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+
+$versionPath = Join-Path $webRoot 'version.json'
+$versionJson = (@{ version = $BuildId } | ConvertTo-Json -Compress)
+[System.IO.File]::WriteAllText($versionPath, $versionJson, $utf8NoBom)
+Write-Host "Wrote version.json ($BuildId)."
+
+$indexPath = Join-Path $webRoot 'index.html'
+if (Test-Path $indexPath) {
+    $html = [System.IO.File]::ReadAllText($indexPath, $utf8NoBom)
+    $metaTag = "<meta name=`"app-build-id`" content=`"$BuildId`">"
+
+    if ($html -match 'name="app-build-id"') {
+        $html = [regex]::Replace(
+            $html,
+            '<meta name="app-build-id" content="[^"]*">',
+            $metaTag
+        )
+    }
+    else {
+        $html = $html -replace '(<head>)', "`$1`r`n  $metaTag"
+    }
+
+    [System.IO.File]::WriteAllText($indexPath, $html, $utf8NoBom)
+    Write-Host 'Injected app-build-id into index.html.'
 }
 
 # Families removed from disk below — must also be dropped from FontManifest or the

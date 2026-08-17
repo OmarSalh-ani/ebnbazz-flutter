@@ -5,7 +5,6 @@ import 'package:masged_parent_app/shared/widgets/mosque_section_header.dart';
 import 'package:masged_parent_app/shared/widgets/quick_services.dart';
 import '../../models/dashboard_models.dart';
 import '../../providers/dashboard_providers.dart';
-import '../../providers/teacher_attendance_providers.dart';
 import '../../../../video_call/providers/video_call_providers.dart';
 import '../../../../video_call/widgets/ongoing_meeting_card.dart';
 import '../teacher_attendance_container.dart';
@@ -24,7 +23,6 @@ class HomeTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return RefreshIndicator(
       onRefresh: () async {
-        ref.invalidate(mosqueProximityProvider);
         ref.invalidate(videoCallMeetingsProvider);
         await ref.read(dashboardPageProvider.notifier).refresh();
       },

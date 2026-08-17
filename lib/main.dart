@@ -6,7 +6,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'app/models/app_role.dart';
 import 'app/providers/app_role_provider.dart';
+import 'features/teacher/auth/providers/auth_providers.dart';
 import 'core/bootstrap/app_startup.dart';
 import 'core/constants/app_constants.dart';
 import 'core/theme/app_theme.dart';
@@ -155,6 +157,9 @@ class _MasgedUnifiedAppState extends ConsumerState<MasgedUnifiedApp>
     }
     _ensurePushConfigured();
     final router = ref.watch(appRouterProvider);
+    final role = ref.watch(appRoleProvider);
+    final isTeacherMrkz =
+        role == AppRole.teacher && ref.watch(teacherIsMrkzProvider);
     return ScreenUtilInit(
       designSize: const Size(375, 812),
       minTextAdapt: true,
@@ -163,7 +168,7 @@ class _MasgedUnifiedAppState extends ConsumerState<MasgedUnifiedApp>
         return MaterialApp.router(
           title: AppConstants.appName,
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
+          theme: isTeacherMrkz ? AppTheme.mrkzTheme : AppTheme.lightTheme,
           routerConfig: router,
           locale: const Locale('ar'),
           supportedLocales: const [Locale('ar')],

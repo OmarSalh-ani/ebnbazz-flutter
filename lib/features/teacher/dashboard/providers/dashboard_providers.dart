@@ -28,6 +28,7 @@ class DashboardPageController extends AsyncNotifier<DashboardPageData> {
     ref.watch(
       authControllerProvider.select((state) => state.valueOrNull?.id),
     );
+    ref.watch(teacherIsMrkzProvider);
     return _load();
   }
 
@@ -46,8 +47,10 @@ class DashboardPageController extends AsyncNotifier<DashboardPageData> {
   }
 
   Future<DashboardPageData> _load() {
+    final isMrkz = ref.read(teacherIsMrkzProvider);
     return ref.read(dashboardRepositoryProvider).loadPage(
           search: _search.isEmpty ? null : _search,
+          isMrkz: isMrkz,
         );
   }
 }

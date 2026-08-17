@@ -13,8 +13,12 @@ import '../../../attendance/providers/attendance_providers.dart';
 import '../../../students/providers/students_providers.dart';
 import '../../providers/dashboard_providers.dart';
 import '../../../chat/utils/open_student_parent_chat.dart';
+import '../../../memorizing_archive/providers/memorizing_archive_providers.dart';
 import '../../../memorizing_archive/screens/teacher_memorizing_archive_screen.dart';
-import '../../../plans/screens/student_plan_screen.dart';
+import '../../../memorizing_archive/widgets/new_memorizing_review_sheet.dart';
+import '../../../mrkz_memorizing/providers/mrkz_memorizing_providers.dart';
+import '../../../mrkz_memorizing/screens/teacher_mrkz_memorizing_archive_screen.dart';
+import '../../../mrkz_memorizing/widgets/mrkz_new_memorizing_review_sheet.dart';
 import '../../../tests/screens/tests_screen.dart';
 import '../../models/dashboard_models.dart';
 import 'small_action_btn.dart';
@@ -31,6 +35,7 @@ class StudentCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isMrkz = ref.watch(teacherIsMrkzProvider);
     final statusColor = studentStatusColorFor(student.isPresentToday);
 
     return Container(
@@ -91,7 +96,7 @@ class StudentCard extends ConsumerWidget {
                         ],
                       ),
                       Text(
-                        '${student.group} - ${student.planLevelName}',
+                        student.listSubtitle(isMrkz: isMrkz),
                         style: AppFonts.cairo(
                           fontSize: 12,
                           color: AppColors.textSecondary,
@@ -144,46 +149,61 @@ class StudentCard extends ConsumerWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => TeacherMemorizingArchiveScreen(
-                          studentId: student.id,
-                          studentName: student.name,
-                        ),
+                        builder: (_) => isMrkz
+                            ? TeacherMrkzMemorizingArchiveScreen(
+                                studentId: student.id,
+                                studentName: student.name,
+                              )
+                            : TeacherMemorizingArchiveScreen(
+                                studentId: student.id,
+                                studentName: student.name,
+                              ),
                       ),
                     );
                   },
                 ),
                 SmallActionBtn(
-                  title: 'الاختبارات',
-                  icon: Icons.assignment,
+                  title: 'حفظ/مراجعة جديد',
+                  icon: Icons.add_circle_outline,
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => TestsScreen(
-                          studentId: student.id,
-                          studentName: student.name,
-                          planLevelName: student.planLevelName,
-                        ),
-                      ),
-                    );
+                    if (isMrkz) {
+                      MrkzNewMemorizingReviewSheet.show(
+                        context,
+                        studentId: student.id,
+                        studentName: student.name,
+                        onSaved: () {
+                          ref.invalidate(mrkzMemorizingArchiveProvider);
+                        },
+                      );
+                    } else {
+                      NewMemorizingReviewSheet.show(
+                        context,
+                        studentId: student.id,
+                        studentName: student.name,
+                        onSaved: () {
+                          ref.invalidate(teacherMemorizingArchiveProvider);
+                        },
+                      );
+                    }
                   },
                 ),
-                SmallActionBtn(
-                  title: 'الخطة',
-                  icon: Icons.calendar_today,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => StudentPlanScreen(
-                          studentId: student.id,
-                          studentName: student.name,
-                          planLevelName: student.planLevelName,
+                if (!isMrkz) ...[
+                  SmallActionBtn(
+                    title: 'الاختبارات',
+                    icon: Icons.assignment,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => TestsScreen(
+                            studentId: student.id,
+                            studentName: student.name,
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
+                      );
+                    },
+                  ),
+                ],
                 SmallActionBtn(
                   title: 'الملاحظات',
                   icon: Icons.chat,

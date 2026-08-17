@@ -6,7 +6,6 @@ import '../chat/providers/teacher_chat_providers.dart';
 import '../dashboard/providers/dashboard_providers.dart';
 import '../dashboard/providers/teacher_admin_notes_provider.dart';
 import '../dashboard/providers/teacher_attendance_providers.dart';
-import '../plans/providers/plan_level_providers.dart';
 import '../students/providers/students_providers.dart';
 import '../../video_call/providers/video_call_providers.dart';
 
@@ -17,12 +16,8 @@ void invalidateTeacherSessionCache(Ref ref) {
   ref.invalidate(availableStudentsSearchProvider);
   ref.invalidate(attendanceStudentsProvider);
   ref.invalidate(teacherAttendanceStatusProvider);
-  ref.invalidate(mosqueProximityProvider);
   ref.invalidate(teacherAdminNotesProvider);
   ref.invalidate(teacherChatThreadsProvider);
-  ref.invalidate(planLevelsListProvider);
-  ref.invalidate(readyPlansListProvider);
-  ref.invalidate(planLevelFormDataProvider);
   ref.invalidate(videoCallMeetingsProvider);
 }
 

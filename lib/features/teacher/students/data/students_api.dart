@@ -1,6 +1,6 @@
 import 'package:masged_parent_app/teacher_core/network/api_client.dart';
 
-import '../../../children/models/student_plan_models.dart';
+import 'package:masged_parent_app/shared/models/paged_result.dart';
 import '../models/available_student.dart';
 
 class StudentsApi {
@@ -12,6 +12,7 @@ class StudentsApi {
     String? searchTerm,
     int page = 1,
     int pageSize = 20,
+    bool isMrkz = false,
   }) {
     final trimmed = searchTerm?.trim();
     return _client.get<PagedResult<AvailableStudent>>(
@@ -19,6 +20,7 @@ class StudentsApi {
       queryParameters: {
         'page': page,
         'pageSize': pageSize,
+        'isMrkz': isMrkz,
         if (trimmed != null && trimmed.isNotEmpty) 'searchTerm': trimmed,
       },
       parseData: (json) {

@@ -36,7 +36,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-  <meta name="description" content="مركز الامام عبد العزيز بن باز للعلوم الشرعية - مركز الامام عبد العزيز بن باز للعلوم الشرعية عبدالله المبارك الصباح">
+  <meta name="description" content="مركز الامام عبد العزيز بن باز للعلوم الشرعية - مركز الامام عبد العزيز بن باز للعلوم الشرعية ">
 
 
 
@@ -46,19 +46,18 @@
 
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
-  <meta name="apple-mobile-web-app-title" content="مركز الامام عبد العزيز بن باز للعلوم الشرعية">
+  <meta name="apple-mobile-web-app-title" content="مركز ابن باز">
 
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-
-
-  <!-- Favicon -->
-
-  <link rel="icon" type="image/png" href="favicon.png">
-
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="web-app-manifest-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="web-app-manifest-512x512.png">
 
 
-  <title>مركز الامام عبد العزيز بن باز للعلوم الشرعية</title>
+
+  <title>مركز ابن باز</title>
 
   <link rel="manifest" href="manifest.json">
 
@@ -212,6 +211,57 @@
   <script>
     // Clear legacy PWA caches before Flutter loads (fixes FontManifest NetworkError).
     window.__flutterWebBoot = (function () {
+      var VERSION_STORAGE_KEY = 'parent-app-build-id';
+
+      function reloadForUpdate() {
+        var url = new URL(window.location.href);
+        url.searchParams.set('_v', Date.now().toString());
+        window.location.replace(url.toString());
+        return new Promise(function () {});
+      }
+
+      function getCurrentBuildId() {
+        var meta = document.querySelector('meta[name="app-build-id"]');
+        return meta ? meta.getAttribute('content') || '' : '';
+      }
+
+      function checkAppVersion() {
+        return fetch('version.json?_=' + Date.now(), { cache: 'no-store' })
+          .then(function (response) {
+            if (!response.ok) {
+              return null;
+            }
+            return response.json();
+          })
+          .then(function (payload) {
+            if (!payload || !payload.version) {
+              return;
+            }
+
+            var latestBuildId = payload.version;
+            var currentBuildId = getCurrentBuildId();
+            var storedBuildId = sessionStorage.getItem(VERSION_STORAGE_KEY);
+
+            if (!storedBuildId) {
+              if (currentBuildId && currentBuildId !== latestBuildId) {
+                sessionStorage.setItem(VERSION_STORAGE_KEY, latestBuildId);
+                return reloadForUpdate();
+              }
+              sessionStorage.setItem(VERSION_STORAGE_KEY, latestBuildId);
+              return;
+            }
+
+            if (
+              storedBuildId !== latestBuildId ||
+              (currentBuildId && currentBuildId !== latestBuildId)
+            ) {
+              sessionStorage.setItem(VERSION_STORAGE_KEY, latestBuildId);
+              return reloadForUpdate();
+            }
+          })
+          .catch(function () {});
+      }
+
       function clearLegacyPwa() {
         if (!('serviceWorker' in navigator)) {
           return Promise.resolve();
@@ -256,6 +306,7 @@
       }
 
       return clearLegacyPwa()
+        .then(checkAppVersion)
         .then(warmFontManifest)
         .then(startFlutter)
         .catch(function (err) {

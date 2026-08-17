@@ -29,6 +29,10 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 final authControllerProvider =
     AsyncNotifierProvider<AuthController, AuthUser?>(AuthController.new);
 
+final teacherIsMrkzProvider = Provider<bool>((ref) {
+  return ref.watch(authControllerProvider).valueOrNull?.isMrkz ?? false;
+});
+
 class AuthController extends AsyncNotifier<AuthUser?> {
   @override
   Future<AuthUser?> build() async {

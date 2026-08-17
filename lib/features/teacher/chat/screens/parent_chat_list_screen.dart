@@ -3,6 +3,7 @@ import 'package:masged_parent_app/core/theme/app_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/theme/app_theme_extensions.dart';
 import '../models/parent_chat_thread_vm.dart';
 import '../providers/teacher_chat_providers.dart';
 import 'teacher_chat_detail_screen.dart';
@@ -78,11 +79,11 @@ class ParentChatListScreen extends ConsumerWidget {
 
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: AppColors.primaryLight,
+              backgroundColor: context.appPrimaryLight,
               child: Text(
                 initial,
                 style: AppFonts.cairo(
-                  color: AppColors.primary,
+                  color: context.appPrimary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
