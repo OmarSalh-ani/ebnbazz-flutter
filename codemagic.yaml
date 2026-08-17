@@ -24,7 +24,7 @@ workflows:
       - name: Clean and fetch dependencies
         script: |
           flutter clean
-          flutter pub get
+          flutter pub upgrade pdfrx
       - name: Install CocoaPods dependencies
         script: |
           cd ios
@@ -67,7 +67,7 @@ workflows:
       - name: Clean and fetch dependencies
         script: |
           flutter clean
-          flutter pub get
+          flutter pub upgrade pdfrx
       - name: Build App Bundle
         script: |
           flutter build appbundle --release \
@@ -93,7 +93,7 @@ workflows:
       cocoapods: default
     scripts:
       - name: Get Flutter packages
-        script: flutter pub get
+        script: flutter pub upgrade pdfrx
       - name: Install CocoaPods dependencies
         script: find . -name "Podfile" -execdir pod install \;
       - name: Build iOS debug without code signing
