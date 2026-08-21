@@ -211,17 +211,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Future<void> _navigateAfterLogin({required bool isTeacher}) async {
-    final onboardingComplete = await PermissionOnboardingService.hasCompleted();
+    await PermissionOnboardingService.markCompleted();
     if (!mounted) return;
-
-    if (onboardingComplete) {
-      context.go(
-        isTeacher ? AppRoutes.teacherDashboard : AppRoutes.home,
-      );
-      return;
-    }
-
-    context.go(AppRoutes.permissionAsk);
+    context.go(
+      isTeacher ? AppRoutes.teacherDashboard : AppRoutes.home,
+    );
   }
 
   Future<void> _performParentLogin() async {
@@ -478,6 +472,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           Expanded(
             child: _RoleTab(
               label: 'ولي أمر',
+              englishLabel: 'Parent',
               icon: Icons.family_restroom_rounded,
               selected: _role == AppRole.parent,
               onTap: () => _selectRole(AppRole.parent),
@@ -487,6 +482,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           Expanded(
             child: _RoleTab(
               label: 'معلم',
+              englishLabel: 'Teacher',
               icon: Icons.school_rounded,
               selected: _role == AppRole.teacher,
               onTap: () => _selectRole(AppRole.teacher),
@@ -539,7 +535,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 Padding(
                   padding: const EdgeInsets.only(right: 15),
                   child: Text(
-                    'اختر طريقة الدخول وأدخل بياناتك',
+                    _isTeacher
+                        ? 'Teacher login — use email and password'
+                        : 'اختر طريقة الدخول وأدخل بياناتك',
                     style: AppFonts.cairo(
                       fontSize: 13,
                       color: SplashColors.whiteText.withValues(alpha: 0.58),
@@ -868,18 +866,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 class _RoleTab extends StatelessWidget {
   const _RoleTab({
     required this.label,
+    required this.englishLabel,
     required this.icon,
     required this.selected,
     required this.onTap,
   });
 
   final String label;
+  final String englishLabel;
   final IconData icon;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final color = selected
+        ? SplashColors.gold
+        : SplashColors.whiteText.withValues(alpha: 0.45);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -887,7 +890,7 @@ class _RoleTab extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
             color: selected
                 ? SplashColors.gold.withValues(alpha: 0.18)
@@ -897,25 +900,31 @@ class _RoleTab extends StatelessWidget {
                 ? Border.all(color: SplashColors.gold.withValues(alpha: 0.45))
                 : null,
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 18,
-                color: selected
-                    ? SplashColors.gold
-                    : SplashColors.whiteText.withValues(alpha: 0.45),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 18, color: color),
+                  const SizedBox(width: 6),
+                  Text(
+                    label,
+                    style: AppFonts.cairo(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 6),
+              const SizedBox(height: 2),
               Text(
-                label,
-                style: AppFonts.cairo(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: selected
-                      ? SplashColors.gold
-                      : SplashColors.whiteText.withValues(alpha: 0.45),
+                englishLabel,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: color.withValues(alpha: selected ? 0.9 : 0.55),
                 ),
               ),
             ],

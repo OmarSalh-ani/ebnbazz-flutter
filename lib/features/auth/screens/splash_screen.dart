@@ -53,27 +53,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       return;
     }
 
-    final onboardingComplete =
-        await PermissionOnboardingService.hasCompleted();
-    if (!mounted) return;
-
     switch (role) {
       case AppRole.teacher:
         final teacherSession = ref.read(authControllerProvider).valueOrNull;
         if (teacherSession != null) {
-          context.go(
-            onboardingComplete
-                ? AppRoutes.teacherDashboard
-                : AppRoutes.permissionAsk,
-          );
+          await PermissionOnboardingService.markCompleted();
+          if (!mounted) return;
+          context.go(AppRoutes.teacherDashboard);
         } else {
           context.go(AppRoutes.login);
         }
       case AppRole.parent:
         if (auth.isAuthenticated) {
-          context.go(
-            onboardingComplete ? AppRoutes.home : AppRoutes.permissionAsk,
-          );
+          await PermissionOnboardingService.markCompleted();
+          if (!mounted) return;
+          context.go(AppRoutes.home);
         } else {
           context.go(AppRoutes.login);
         }

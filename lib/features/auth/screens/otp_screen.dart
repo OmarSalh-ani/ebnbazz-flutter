@@ -25,12 +25,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
           .read(authProvider.notifier)
           .verifyOtp(_otpController.text, widget.phone);
       if (success && mounted) {
-        final onboardingComplete =
-            await PermissionOnboardingService.hasCompleted();
+        await PermissionOnboardingService.markCompleted();
         if (!mounted) return;
-        context.go(
-          onboardingComplete ? AppRoutes.home : AppRoutes.permissionAsk,
-        );
+        context.go(AppRoutes.home);
       }
     }
   }

@@ -186,15 +186,6 @@ List<RouteBase> _sharedIslamicServiceRoutes() {
   ];
 }
 
-bool _isLoggedIn({
-  required AppRole? role,
-  required bool isAuth,
-  required bool hasTeacherSession,
-}) {
-  if (role == AppRole.teacher) return hasTeacherSession;
-  return isAuth;
-}
-
 String _postPermissionDestination(AppRole? role) {
   return role == AppRole.teacher
       ? AppRoutes.teacherDashboard
@@ -239,21 +230,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final authState = ref.read(authProvider);
       final role = ref.read(appRoleProvider);
-      final onboardingState = ref.read(permissionOnboardingProvider);
       final location = state.matchedLocation;
       final isAuth = authState.isAuthenticated;
       final isInitial = authState.status == AuthStatus.initial;
       final isSplash = location == AppRoutes.splash;
       final isLogin = location == AppRoutes.login;
-      final isProductIntro = location == AppRoutes.productIntro;
       final isPermissionAsk = location == AppRoutes.permissionAsk;
       final teacherUser = ref.read(authControllerProvider).valueOrNull;
       final hasTeacherSession = teacherUser != null;
-      final isLoggedIn = _isLoggedIn(
-        role: role,
-        isAuth: isAuth,
-        hasTeacherSession: hasTeacherSession,
-      );
 
       if (isInitial && isSplash) return null;
 
@@ -261,37 +245,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
-      if (!onboardingState.isLoading) {
-        final onboardingComplete = onboardingState.value ?? false;
-
-        if (isLoggedIn &&
-            !onboardingComplete &&
-            !isPermissionAsk &&
-            !isLogin &&
-            !isSplash &&
-            !isProductIntro &&
-            !_isPublicServiceRoute(location)) {
-          return AppRoutes.permissionAsk;
-        }
-
-        if (onboardingComplete && isPermissionAsk) {
-          return _postPermissionDestination(role);
-        }
+      // Permissions are requested only at feature use (Guideline 5.1.1(iv)).
+      // Legacy /permission-ask route immediately completes and redirects.
+      if (isPermissionAsk) {
+        return _postPermissionDestination(role);
       }
 
       if (isLogin) {
         if (role == AppRole.teacher) {
           if (hasTeacherSession) {
-            final onboardingComplete =
-                ref.read(permissionOnboardingProvider).value ?? false;
-            return onboardingComplete
-                ? AppRoutes.teacherDashboard
-                : AppRoutes.permissionAsk;
+            return AppRoutes.teacherDashboard;
           }
         } else if (isAuth) {
-          final onboardingComplete =
-              ref.read(permissionOnboardingProvider).value ?? false;
-          return onboardingComplete ? AppRoutes.home : AppRoutes.permissionAsk;
+          return AppRoutes.home;
         }
         return null;
       }
@@ -343,9 +309,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (isAuth &&
           (location == AppRoutes.login ||
               location == AppRoutes.register)) {
-        final onboardingComplete =
-            ref.read(permissionOnboardingProvider).value ?? false;
-        return onboardingComplete ? AppRoutes.home : AppRoutes.permissionAsk;
+        return AppRoutes.home;
       }
 
       if (location == AppRoutes.teacherDashboard) {
