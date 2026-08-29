@@ -7,7 +7,8 @@
 # - iOS distribution certificate + App Store provisioning profile for the bundle id
 # - The app already exists in App Store Connect
 # - The first version must already be published manually; this workflow is for updates
-# - App Store listing is Arabic only (ar-SA). Do not add en-US unless that locale is fully filled.
+# - App Store Connect localizations in release_notes.json must be complete for ar-SA and en-US
+#   (what's new, description, keywords, support URL) or Apple rejects review submission.
 # - Apple review still has to approve. “Automatic” means: submit the build, fill What’s New,
 #   and release after approval — it does not skip App Review.
 #
@@ -42,103 +43,27 @@ workflows:
         script: |
           flutter clean
           flutter pub get
-      - name: Prepare Arabic App Store metadata
+      - name: Prepare App Store metadata
         script: |
           set -euo pipefail
           python3 << 'PY'
           import json
-          notes = {
-              "language": "ar-SA",
+
+          shared = {
               "text": "تحسينات في الاداء",
               "description": "CUSTOMER_APP_STORE_DESCRIPTION",
               "keywords": "CUSTOMER_APP_STORE_KEYWORDS",
               "support_url": "https://customer.com",
           }
+          notes = [
+              {"language": "ar-SA", **shared},
+              {"language": "en-US", **shared},
+          ]
           with open("release_notes.json", "w", encoding="utf-8") as f:
-              json.dump([notes], f, ensure_ascii=False, indent=2)
+              json.dump(notes, f, ensure_ascii=False, indent=2)
               f.write("\n")
           PY
           cat release_notes.json
-      - name: Remove leftover English App Store localizations
-        script: |
-          set -euo pipefail
-          python3 << 'PY'
-          import json
-          import os
-          import subprocess
-          import sys
-
-          KEEP_LOCALE = "ar-SA"
-          bundle_id = os.environ["BUNDLE_ID"]
-
-          def load_resources(raw: str):
-              raw = (raw or "").strip()
-              if not raw:
-                  return []
-              data = json.loads(raw)
-              if isinstance(data, list):
-                  return data
-              if isinstance(data, dict):
-                  if isinstance(data.get("data"), list):
-                      return data["data"]
-                  if "id" in data:
-                      return [data]
-              return []
-
-          def run_json(*args: str):
-              result = subprocess.run(
-                  ["app-store-connect", "--json", "-s", *args],
-                  check=True,
-                  capture_output=True,
-                  text=True,
-              )
-              return load_resources(result.stdout)
-
-          apps = run_json(
-              "apps",
-              "list",
-              "--bundle-id-identifier",
-              bundle_id,
-              "--strict-match-identifier",
-          )
-          if not apps:
-              sys.exit(f"No App Store Connect app found for {bundle_id}")
-          app_id = apps[0]["id"]
-
-          versions = run_json(
-              "apps",
-              "app-store-versions",
-              app_id,
-              "--platform",
-              "IOS",
-              "--state",
-              "PREPARE_FOR_SUBMISSION",
-          )
-          if not versions:
-              print("No editable App Store version; nothing to clean up")
-              raise SystemExit(0)
-
-          for version in versions:
-              version_id = version["id"]
-              localizations = run_json("app-store-versions", "localizations", version_id)
-              for loc in localizations:
-                  locale = (loc.get("attributes") or {}).get("locale") or loc.get("locale")
-                  loc_id = loc.get("id")
-                  if locale == KEEP_LOCALE or not loc_id:
-                      continue
-                  print(f"Deleting leftover localization {locale} ({loc_id}) from version {version_id}")
-                  subprocess.run(
-                      [
-                          "app-store-connect",
-                          "-s",
-                          "app-store-version-localizations",
-                          "delete",
-                          loc_id,
-                          "--ignore-not-found",
-                      ],
-                      check=True,
-                  )
-          PY
       - name: Install CocoaPods dependencies
         script: |
           cd ios
