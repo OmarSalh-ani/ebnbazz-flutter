@@ -18,13 +18,15 @@ class TestCertificateApi {
     );
   }
 
-  Future<String> getCertificateHtml(
+  Future<DownloadedBytes> getCertificatePdf(
     int testId, {
     String testPeriod = 'الفصل الأول',
   }) {
-    return _client.getText(
-      '/api/test-certificates/$testId/html',
+    return _client.getBytes(
+      '/api/test-certificates/$testId/pdf',
       queryParameters: {'testPeriod': testPeriod},
+      fallbackFileName:
+          'certificate_${testId}_${DateTime.now().millisecondsSinceEpoch}.pdf',
     );
   }
 }

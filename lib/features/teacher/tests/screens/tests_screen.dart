@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:masged_parent_app/teacher_core/network/api_exception.dart';
 import 'package:masged_parent_app/core/theme/app_colors.dart';
+import 'package:masged_parent_app/core/utils/exported_file_saver.dart';
 import 'package:masged_parent_app/shared/widgets/custom_button.dart';
 import 'package:masged_parent_app/shared/widgets/custom_text_field.dart';
-import '../helpers/certificate_printer.dart';
 import '../models/student_test_models.dart';
 import '../models/test_certificate_models.dart';
 import '../providers/student_tests_providers.dart';
@@ -47,7 +47,7 @@ class _TestsScreenState extends ConsumerState<TestsScreen> {
   int _totalScore = 0;
   String _grade = 'ضعيف';
   bool _isSaving = false;
-  int? _printingTestId;
+  int? _downloadingTestId;
 
   @override
   void initState() {
@@ -150,28 +150,28 @@ class _TestsScreenState extends ConsumerState<TestsScreen> {
     _calculateScore();
   }
 
-  Future<void> _printCertificate(StudentTestDetail test) async {
+  Future<void> _downloadCertificate(StudentTestDetail test) async {
     final period = await _pickTestPeriod();
     if (period == null || !mounted) return;
 
-    setState(() => _printingTestId = test.testId);
+    setState(() => _downloadingTestId = test.testId);
     try {
-      final html = await ref.read(testCertificateApiProvider).getCertificateHtml(
+      final pdf = await ref.read(testCertificateApiProvider).getCertificatePdf(
             test.testId,
             testPeriod: period,
           );
-      await openCertificateForPrint(
-        html,
-        title: 'شهادة ${test.surahName}',
-      );
+      await saveExportedFile(pdf.bytes, pdf.fileName);
+      if (mounted) {
+        _showMessage('تم حفظ الملف في مجلد التنزيلات');
+      }
     } on ApiException catch (e) {
       if (mounted) _showMessage(e.message, isError: true);
     } catch (_) {
       if (mounted) {
-        _showMessage('تعذر تحميل الشهادة للطباعة', isError: true);
+        _showMessage('تعذر تحميل الشهادة', isError: true);
       }
     } finally {
-      if (mounted) setState(() => _printingTestId = null);
+      if (mounted) setState(() => _downloadingTestId = null);
     }
   }
 
@@ -799,19 +799,19 @@ class _TestsScreenState extends ConsumerState<TestsScreen> {
                   ),
                 ),
                 DataCell(
-                  _printingTestId == test.testId
+                  _downloadingTestId == test.testId
                       ? const SizedBox(
                           width: 24,
                           height: 24,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : IconButton(
-                          tooltip: 'طباعة الشهادة',
+                          tooltip: 'تنزيل الشهادة',
                           icon: const Icon(
-                            Icons.print,
+                            Icons.download,
                             color: AppColors.primary,
                           ),
-                          onPressed: () => _printCertificate(test),
+                          onPressed: () => _downloadCertificate(test),
                         ),
                 ),
               ],

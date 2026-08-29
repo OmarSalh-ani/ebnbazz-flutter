@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -7,6 +9,13 @@ import '../config/api_config.dart';
 import '../storage/auth_storage.dart';
 import 'api_exception.dart';
 import 'global_response.dart';
+
+class DownloadedBytes {
+  const DownloadedBytes({required this.bytes, required this.fileName});
+
+  final Uint8List bytes;
+  final String fileName;
+}
 
 class TeacherApiClient {
   TeacherApiClient(this._authStorage) {
@@ -87,26 +96,36 @@ class TeacherApiClient {
     }
   }
 
-  /// GET that returns raw text (e.g. HTML certificate).
-  Future<String> getText(
+  /// GET that returns raw bytes (e.g. a PDF certificate).
+  Future<DownloadedBytes> getBytes(
     String path, {
     Map<String, dynamic>? queryParameters,
-    String accept = 'text/html',
+    String accept = 'application/pdf',
+    required String fallbackFileName,
   }) async {
     try {
-      final response = await _dio.get<String>(
+      final response = await _dio.get<List<int>>(
         _resolvePath(path),
         queryParameters: queryParameters,
         options: Options(
-          responseType: ResponseType.plain,
+          responseType: ResponseType.bytes,
           headers: {'Accept': accept},
         ),
       );
-      final text = response.data;
-      if (text == null || text.trim().isEmpty) {
+      final data = response.data;
+      if (data == null || data.isEmpty) {
         throw ApiException(message: 'استجابة فارغة من الخادم');
       }
-      return text;
+
+      final fileName = _fileNameFromContentDisposition(
+            response.headers.value('content-disposition'),
+          ) ??
+          fallbackFileName;
+
+      return DownloadedBytes(
+        bytes: Uint8List.fromList(data),
+        fileName: fileName,
+      );
     } on DioException catch (e) {
       throw _mapDioError(e);
     }
@@ -269,15 +288,12 @@ class TeacherApiClient {
   }
 
   ApiException _mapDioError(DioException error) {
-    final data = error.response?.data;
-    if (data is Map<String, dynamic>) {
-      final message = data['message'] as String?;
-      if (message != null && message.isNotEmpty) {
-        return ApiException(
-          message: message,
-          statusCode: error.response?.statusCode,
-        );
-      }
+    final message = _messageFromErrorBody(error.response?.data);
+    if (message != null && message.isNotEmpty) {
+      return ApiException(
+        message: message,
+        statusCode: error.response?.statusCode,
+      );
     }
 
     switch (error.type) {
@@ -295,5 +311,56 @@ class TeacherApiClient {
           statusCode: error.response?.statusCode,
         );
     }
+  }
+
+  static String? _messageFromErrorBody(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      final message = data['message'] as String?;
+      return message != null && message.isNotEmpty ? message : null;
+    }
+
+    String? asText;
+    if (data is List<int>) {
+      asText = utf8.decode(data, allowMalformed: true);
+    } else if (data is String) {
+      asText = data;
+    }
+    if (asText == null || asText.trim().isEmpty) return null;
+
+    try {
+      final decoded = jsonDecode(asText);
+      if (decoded is Map && decoded['message'] is String) {
+        final message = decoded['message'] as String;
+        return message.isNotEmpty ? message : null;
+      }
+    } catch (_) {
+      // Body is not JSON (e.g. HTML error page).
+    }
+    return null;
+  }
+
+  static String? _fileNameFromContentDisposition(String? header) {
+    if (header == null || header.isEmpty) return null;
+
+    final match = RegExp(
+      r'''filename\*?=(?:UTF-8'')?["']?([^";]+)["']?''',
+      caseSensitive: false,
+    ).firstMatch(header);
+    final rawName = match?.group(1)?.trim();
+    if (rawName == null || rawName.isEmpty) return null;
+
+    var name = rawName;
+    try {
+      name = Uri.decodeComponent(rawName);
+    } catch (_) {
+      // Keep the raw token if it is not percent-encoded.
+    }
+
+    name = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    if (name.isEmpty) return null;
+    if (!name.toLowerCase().endsWith('.pdf')) {
+      name = '$name.pdf';
+    }
+    return name;
   }
 }
