@@ -5,7 +5,7 @@
 # - iOS distribution certificate + App Store provisioning profile for the bundle id
 # - The app already exists in App Store Connect
 # - The first version must already be published manually; this workflow is for updates
-# - App Store Connect localizations must include the language codes in release_notes.json (ar-SA, en-US)
+# - App Store listing is Arabic only (ar-SA). Do not add en-US unless that locale is fully filled.
 # - Apple review still has to approve. “Automatic” means: submit the build, fill What’s New,
 #   and release after approval — it does not skip App Review.
 #
@@ -39,24 +39,122 @@ workflows:
         script: |
           flutter clean
           flutter pub get
-      - name: Prepare App Store What's New
+      - name: Prepare Arabic App Store metadata
         script: |
-          set -e
-          NOTES="تحسينات في الاداء"
-          ESCAPED=$(python3 -c 'import json,sys; print(json.dumps(sys.stdin.read().strip()[:4000]))' <<< "$NOTES")
-          cat > release_notes.json << EOF
-          [
-            {
+          set -euo pipefail
+          python3 << 'PY'
+          import json
+          notes = {
               "language": "ar-SA",
-              "text": ${ESCAPED}
-            },
-            {
-              "language": "en-US",
-              "text": ${ESCAPED}
-            }
-          ]
-          EOF
+              "text": "تحسينات في الاداء",
+              "description": (
+                  "تطبيق مركز الإمام عبد العزيز بن باز للعلوم الشرعية.\n\n"
+                  "تطبيق رسمي مخصّص لأولياء الأمور والمعلمين في المركز، يسهّل المتابعة والتواصل وإدارة المهام اليومية في مكان واحد.\n\n"
+                  "لأولياء الأمور:\n"
+                  "• متابعة أبنائهم في المركز\n"
+                  "• الاطلاع على التقدّم والمستوى\n"
+                  "• استلام الإشعارات والتنبيهات المهمة\n"
+                  "• البقاء على تواصل مع المركز بسهولة\n\n"
+                  "للمعلمين:\n"
+                  "• إدارة الطلاب والحصص\n"
+                  "• تسجيل الحضور\n"
+                  "• متابعة الأداء والتقدّم\n"
+                  "• أدوات تساعد على تنظيم العمل اليومي\n\n"
+                  "مزايا مشتركة:\n"
+                  "• المصحف الشريف بتجربة قراءة مريحة\n"
+                  "• الأذكار\n"
+                  "• أخبار وإعلانات المركز\n"
+                  "• معلومات المركز\n\n"
+                  "حمّل التطبيق الآن وابقَ على اتصال بمركز الإمام عبد العزيز بن باز للعلوم الشرعية."
+              ),
+              "keywords": "مركز الامام,بن باز,ولي أمر,معلم,قرآن,أذكار,حضور,علوم شرعية,متابعة,كويت",
+              "support_url": "https://ebnbazz.com",
+          }
+          with open("release_notes.json", "w", encoding="utf-8") as f:
+              json.dump([notes], f, ensure_ascii=False, indent=2)
+              f.write("\n")
+          PY
           cat release_notes.json
+      - name: Remove leftover English App Store localizations
+        script: |
+          set -euo pipefail
+          python3 << 'PY'
+          import json
+          import os
+          import subprocess
+          import sys
+
+          KEEP_LOCALE = "ar-SA"
+          bundle_id = os.environ["BUNDLE_ID"]
+
+          def load_resources(raw: str):
+              raw = (raw or "").strip()
+              if not raw:
+                  return []
+              data = json.loads(raw)
+              if isinstance(data, list):
+                  return data
+              if isinstance(data, dict):
+                  if isinstance(data.get("data"), list):
+                      return data["data"]
+                  if "id" in data:
+                      return [data]
+              return []
+
+          def run_json(*args: str):
+              result = subprocess.run(
+                  ["app-store-connect", "--json", "-s", *args],
+                  check=True,
+                  capture_output=True,
+                  text=True,
+              )
+              return load_resources(result.stdout)
+
+          apps = run_json(
+              "apps",
+              "list",
+              "--bundle-id-identifier",
+              bundle_id,
+              "--strict-match-identifier",
+          )
+          if not apps:
+              sys.exit(f"No App Store Connect app found for {bundle_id}")
+          app_id = apps[0]["id"]
+
+          versions = run_json(
+              "apps",
+              "app-store-versions",
+              app_id,
+              "--platform",
+              "IOS",
+              "--state",
+              "PREPARE_FOR_SUBMISSION",
+          )
+          if not versions:
+              print("No editable App Store version; nothing to clean up")
+              raise SystemExit(0)
+
+          for version in versions:
+              version_id = version["id"]
+              localizations = run_json("app-store-versions", "localizations", version_id)
+              for loc in localizations:
+                  locale = (loc.get("attributes") or {}).get("locale") or loc.get("locale")
+                  loc_id = loc.get("id")
+                  if locale == KEEP_LOCALE or not loc_id:
+                      continue
+                  print(f"Deleting leftover localization {locale} ({loc_id}) from version {version_id}")
+                  subprocess.run(
+                      [
+                          "app-store-connect",
+                          "-s",
+                          "app-store-version-localizations",
+                          "delete",
+                          loc_id,
+                          "--ignore-not-found",
+                      ],
+                      check=True,
+                  )
+          PY
       - name: Install CocoaPods dependencies
         script: |
           cd ios
