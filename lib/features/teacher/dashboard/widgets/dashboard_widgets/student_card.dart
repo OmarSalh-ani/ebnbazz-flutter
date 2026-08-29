@@ -19,6 +19,7 @@ import '../../../memorizing_archive/widgets/new_memorizing_review_sheet.dart';
 import '../../../mrkz_memorizing/providers/mrkz_memorizing_providers.dart';
 import '../../../mrkz_memorizing/screens/teacher_mrkz_memorizing_archive_screen.dart';
 import '../../../mrkz_memorizing/widgets/mrkz_new_memorizing_review_sheet.dart';
+import '../../../mrkz_tests/screens/mrkz_test_page.dart';
 import '../../../tests/screens/tests_screen.dart';
 import '../../models/dashboard_models.dart';
 import 'small_action_btn.dart';
@@ -187,23 +188,26 @@ class StudentCard extends ConsumerWidget {
                     }
                   },
                 ),
-                if (!isMrkz) ...[
-                  SmallActionBtn(
-                    title: 'الاختبارات',
-                    icon: Icons.assignment,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => TestsScreen(
-                            studentId: student.id,
-                            studentName: student.name,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                SmallActionBtn(
+                  title: 'الاختبارات',
+                  icon: Icons.assignment,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => isMrkz
+                            ? MrkzTestPage(
+                                studentId: student.id,
+                                studentName: student.name,
+                              )
+                            : TestsScreen(
+                                studentId: student.id,
+                                studentName: student.name,
+                              ),
+                      ),
+                    );
+                  },
+                ),
                 SmallActionBtn(
                   title: 'الملاحظات',
                   icon: Icons.chat,

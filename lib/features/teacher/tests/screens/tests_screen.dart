@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:masged_parent_app/core/theme/app_fonts.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:masged_parent_app/teacher_core/network/api_exception.dart';
 import 'package:masged_parent_app/core/theme/app_colors.dart';
 import 'package:masged_parent_app/core/utils/exported_file_saver.dart';
 import 'package:masged_parent_app/shared/widgets/custom_button.dart';
 import 'package:masged_parent_app/shared/widgets/custom_text_field.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../models/student_test_models.dart';
 import '../models/test_certificate_models.dart';
 import '../providers/student_tests_providers.dart';
@@ -164,14 +166,32 @@ class _TestsScreenState extends ConsumerState<TestsScreen> {
       if (mounted) {
         _showMessage('تم حفظ الملف في مجلد التنزيلات');
       }
-    } on ApiException catch (e) {
-      if (mounted) _showMessage(e.message, isError: true);
-    } catch (_) {
-      if (mounted) {
+    } catch (error) {
+      final opened = await _openCertificatePdfInBrowser(test.testId, period);
+      if (!mounted) return;
+      if (opened) {
+        _showMessage('تعذر حفظ الملف، تم فتح الشهادة في المتصفح');
+      } else if (error is ApiException) {
+        _showMessage(error.message, isError: true);
+      } else {
         _showMessage('تعذر تحميل الشهادة', isError: true);
       }
     } finally {
       if (mounted) setState(() => _downloadingTestId = null);
+    }
+  }
+
+  Future<bool> _openCertificatePdfInBrowser(int testId, String testPeriod) async {
+    try {
+      final token = await ref.read(authStorageProvider).getToken();
+      final uri = ref.read(testCertificateApiProvider).certificatePdfUri(
+            testId: testId,
+            testPeriod: testPeriod,
+            accessToken: token,
+          );
+      return launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      return false;
     }
   }
 

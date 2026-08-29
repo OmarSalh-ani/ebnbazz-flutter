@@ -1,6 +1,18 @@
 # White-label Codemagic template
 # Copy to codemagic.yaml and replace CUSTOMER_* placeholders.
 # Do not commit customer signing secrets — configure them in the Codemagic UI.
+#
+# Prerequisites (Codemagic UI, not yaml secrets):
+# - App Store Connect API key integration; its name must match integrations.app_store_connect
+# - iOS distribution certificate + App Store provisioning profile for the bundle id
+# - The app already exists in App Store Connect
+# - The first version must already be published manually; this workflow is for updates
+# - App Store Connect localizations must include the language codes in release_notes.json (ar-SA, en-US)
+# - Apple review still has to approve. “Automatic” means: submit the build, fill What’s New,
+#   and release after approval — it does not skip App Review.
+#
+# This yaml lives in the Flutter app git root (ParentApp). Do not set working_directory
+# unless the Codemagic checkout root is a parent monorepo.
 
 workflows:
   flutter-ios-signed:
@@ -30,10 +42,29 @@ workflows:
         script: |
           flutter clean
           flutter pub get
+      - name: Prepare App Store What's New
+        script: |
+          set -e
+          NOTES="تحسينات في الاداء"
+          ESCAPED=$(python3 -c 'import json,sys; print(json.dumps(sys.stdin.read().strip()[:4000]))' <<< "$NOTES")
+          cat > release_notes.json << EOF
+          [
+            {
+              "language": "ar-SA",
+              "text": ${ESCAPED}
+            },
+            {
+              "language": "en-US",
+              "text": ${ESCAPED}
+            }
+          ]
+          EOF
+          cat release_notes.json
       - name: Install CocoaPods dependencies
         script: |
           cd ios
-          pod install
+          rm -f Podfile.lock
+          pod install --repo-update
       - name: Build IPA
         script: |
           flutter build ipa --release \
