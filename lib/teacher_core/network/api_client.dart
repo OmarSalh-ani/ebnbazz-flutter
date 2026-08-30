@@ -117,13 +117,18 @@ class TeacherApiClient {
         throw ApiException(message: 'استجابة فارغة من الخادم');
       }
 
+      final bytes = Uint8List.fromList(data);
+      if (!_isPdfBytes(bytes)) {
+        throw ApiException(message: 'استجابة الخادم ليست ملف PDF صالح');
+      }
+
       final fileName = _fileNameFromContentDisposition(
             response.headers.value('content-disposition'),
           ) ??
           fallbackFileName;
 
       return DownloadedBytes(
-        bytes: Uint8List.fromList(data),
+        bytes: bytes,
         fileName: fileName,
       );
     } on DioException catch (e) {
@@ -362,5 +367,13 @@ class TeacherApiClient {
       name = '$name.pdf';
     }
     return name;
+  }
+
+  static bool _isPdfBytes(Uint8List bytes) {
+    if (bytes.length < 5) return false;
+    return bytes[0] == 0x25 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x44 &&
+        bytes[3] == 0x46;
   }
 }

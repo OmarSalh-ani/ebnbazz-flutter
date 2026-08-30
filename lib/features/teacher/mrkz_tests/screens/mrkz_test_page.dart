@@ -150,7 +150,7 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
       final pdf = await ref.read(mrkzTestsApiProvider).getCertificatePdf(test.testId);
       await saveExportedFile(pdf.bytes, pdf.fileName);
       if (mounted) {
-        _showMessage('تم حفظ الملف في مجلد التنزيلات');
+        _showMessage('اختر «فتح» أو «حفظ» من قائمة المشاركة');
       }
     } catch (error) {
       final opened = await _openCertificatePdfInBrowser(test.testId);

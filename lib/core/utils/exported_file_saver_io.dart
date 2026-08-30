@@ -2,26 +2,37 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 Future<void> saveExportedFile(Uint8List bytes, String fileName) async {
-  final safeName = _asciiFileName(fileName);
-  final candidates = await _candidateDirectories();
-
-  Object? lastError;
-  for (final dir in candidates) {
-    try {
-      if (!await dir.exists()) {
-        await dir.create(recursive: true);
-      }
-      final file = File('${dir.path}/$safeName');
-      await file.writeAsBytes(bytes, flush: true);
-      return;
-    } catch (error) {
-      lastError = error;
-    }
+  if (!_isPdfBytes(bytes)) {
+    throw const FileSystemException('الملف المستلم ليس شهادة PDF صالحة');
   }
 
-  throw lastError ?? FileSystemException('تعذر حفظ الملف');
+  final safeName = _asciiFileName(fileName);
+  final dir = await getTemporaryDirectory();
+  final file = File('${dir.path}/$safeName');
+  await file.writeAsBytes(bytes, flush: true);
+  if (!await file.exists() || await file.length() != bytes.length) {
+    throw const FileSystemException('تعذر تجهيز الملف للمشاركة');
+  }
+
+  await SharePlus.instance.share(
+    ShareParams(
+      files: [XFile(file.path, mimeType: 'application/pdf', name: safeName)],
+      fileNameOverrides: [safeName],
+      subject: 'شهادة اختبار',
+    ),
+  );
+}
+
+bool _isPdfBytes(Uint8List bytes) {
+  if (bytes.length < 5) return false;
+  // %PDF
+  return bytes[0] == 0x25 &&
+      bytes[1] == 0x50 &&
+      bytes[2] == 0x44 &&
+      bytes[3] == 0x46;
 }
 
 String _asciiFileName(String fileName) {
@@ -32,29 +43,4 @@ String _asciiFileName(String fileName) {
     name = '$name.pdf';
   }
   return name;
-}
-
-Future<List<Directory>> _candidateDirectories() async {
-  final dirs = <Directory>[];
-
-  if (Platform.isAndroid) {
-    dirs.add(Directory('/storage/emulated/0/Download'));
-  }
-
-  try {
-    final downloads = await getDownloadsDirectory();
-    if (downloads != null) dirs.add(downloads);
-  } catch (_) {
-    // iOS and some platforms do not expose a public Downloads folder.
-  }
-
-  if (Platform.isAndroid) {
-    try {
-      final external = await getExternalStorageDirectory();
-      if (external != null) dirs.add(external);
-    } catch (_) {}
-  }
-
-  dirs.add(await getApplicationDocumentsDirectory());
-  return dirs;
 }
