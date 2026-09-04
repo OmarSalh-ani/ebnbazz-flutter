@@ -8,35 +8,47 @@ class MrkzTestsApi {
 
   final TeacherApiClient _client;
 
-  Future<MrkzTestsPage> getTests(int studentId) {
-    return _client.get<MrkzTestsPage>(
-      '/api/students/$studentId/mrkz-tests',
-      parseData: (json) =>
-          MrkzTestsPage.fromJson(json as Map<String, dynamic>),
+  Future<List<MrkzTestDefinitionOption>> getDefinitions(int studentId) {
+    return _client.get<List<MrkzTestDefinitionOption>>(
+      '/api/students/$studentId/mrkz-tests/definitions',
+      parseData: (json) {
+        final list = json as List<dynamic>? ?? [];
+        return list
+            .whereType<Map>()
+            .map((e) => MrkzTestDefinitionOption.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      },
     );
   }
 
-  Future<String> createTest(int studentId, SaveMrkzTestRequest request) {
+  Future<MrkzTestsPage> getTests(int studentId) {
+    return _client.get<MrkzTestsPage>(
+      '/api/students/$studentId/mrkz-tests',
+      parseData: (json) => MrkzTestsPage.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  Future<String> createTest(int studentId, SaveMrkzTestResultRequest request) {
     return _client.postCommand(
       '/api/students/$studentId/mrkz-tests',
       body: request.toJson(),
     );
   }
 
-  Future<DownloadedBytes> getCertificatePdf(int testId) {
+  Future<DownloadedBytes> getCertificatePdf(int resultId) {
     return _client.getBytes(
-      '/api/mrkz-test-certificates/$testId/pdf',
+      '/api/mrkz-test-certificates/$resultId/pdf',
       fallbackFileName:
-          'mrkz_certificate_${testId}_${DateTime.now().millisecondsSinceEpoch}.pdf',
+          'mrkz_certificate_${resultId}_${DateTime.now().millisecondsSinceEpoch}.pdf',
     );
   }
 
   Uri certificatePdfUri({
-    required int testId,
+    required int resultId,
     String? accessToken,
   }) {
     final path = UnifiedApiConfig.teacherPath(
-      '/api/mrkz-test-certificates/$testId/pdf',
+      '/api/mrkz-test-certificates/$resultId/pdf',
     );
     return Uri.parse('${UnifiedApiConfig.teacherBaseUrl}$path').replace(
       queryParameters: {

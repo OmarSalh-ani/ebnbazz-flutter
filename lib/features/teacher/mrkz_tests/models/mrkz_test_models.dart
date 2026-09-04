@@ -1,41 +1,50 @@
-class MrkzTestsPage {
-  const MrkzTestsPage({
-    required this.studentId,
-    required this.studentName,
-    required this.tests,
+class MrkzTestDefinitionOption {
+  const MrkzTestDefinitionOption({
+    required this.id,
+    required this.mtnName,
+    required this.totalScore,
+    required this.errorWeight,
   });
 
-  final int studentId;
-  final String studentName;
-  final List<MrkzTestRecord> tests;
+  final int id;
+  final String mtnName;
+  final double totalScore;
+  final double errorWeight;
 
-  factory MrkzTestsPage.fromJson(Map<String, dynamic> json) {
-    final testsJson = json['tests'] as List<dynamic>? ?? [];
-    return MrkzTestsPage(
-      studentId: json['studentId'] as int? ?? 0,
-      studentName: json['studentName'] as String? ?? '',
-      tests: testsJson
-          .whereType<Map>()
-          .map((e) => MrkzTestRecord.fromJson(Map<String, dynamic>.from(e)))
-          .toList(),
+  factory MrkzTestDefinitionOption.fromJson(Map<String, dynamic> json) {
+    return MrkzTestDefinitionOption(
+      id: json['id'] as int? ?? 0,
+      mtnName: json['mtnName'] as String? ?? '',
+      totalScore: _toDouble(json['totalScore']),
+      errorWeight: _toDouble(json['errorWeight']),
     );
   }
 }
 
-class MrkzTestRecord {
-  const MrkzTestRecord({
-    required this.testId,
-    required this.testDate,
-    required this.averageScore,
+class MrkzTestResultRecord {
+  const MrkzTestResultRecord({
+    required this.resultId,
+    required this.testDefinitionId,
+    required this.mtnName,
+    required this.totalScore,
+    required this.errorWeight,
+    required this.mistakeCount,
+    required this.finalScore,
     required this.grade,
-    required this.items,
+    this.notes,
+    required this.testDate,
   });
 
-  final int testId;
-  final String testDate;
-  final double averageScore;
+  final int resultId;
+  final int testDefinitionId;
+  final String mtnName;
+  final double totalScore;
+  final double errorWeight;
+  final int mistakeCount;
+  final double finalScore;
   final String grade;
-  final List<MrkzTestItem> items;
+  final String? notes;
+  final String testDate;
 
   String get displayDate {
     if (testDate.isEmpty) return '';
@@ -45,76 +54,75 @@ class MrkzTestRecord {
         '${parsed.hour.toString().padLeft(2, '0')}:${parsed.minute.toString().padLeft(2, '0')}';
   }
 
-  String get mutoonSummary {
-    final names = items.map((i) => i.mtnName).where((n) => n.isNotEmpty);
-    if (names.isEmpty) return '—';
-    return names.join('، ');
-  }
+  String get displayFinalScore => _formatScore(finalScore);
 
-  String get displayAverage => _formatScore(averageScore);
-
-  factory MrkzTestRecord.fromJson(Map<String, dynamic> json) {
-    final itemsJson = json['items'] as List<dynamic>? ?? [];
-    return MrkzTestRecord(
-      testId: json['testId'] as int? ?? 0,
-      testDate: json['testDate'] as String? ?? '',
-      averageScore: _toDouble(json['averageScore']),
+  factory MrkzTestResultRecord.fromJson(Map<String, dynamic> json) {
+    return MrkzTestResultRecord(
+      resultId: json['resultId'] as int? ?? 0,
+      testDefinitionId: json['testDefinitionId'] as int? ?? 0,
+      mtnName: json['mtnName'] as String? ?? '',
+      totalScore: _toDouble(json['totalScore']),
+      errorWeight: _toDouble(json['errorWeight']),
+      mistakeCount: json['mistakeCount'] as int? ?? 0,
+      finalScore: _toDouble(json['finalScore']),
       grade: json['grade'] as String? ?? '',
-      items: itemsJson
+      notes: json['notes'] as String?,
+      testDate: json['testDate'] as String? ?? '',
+    );
+  }
+}
+
+class MrkzTestsPage {
+  const MrkzTestsPage({
+    required this.studentId,
+    required this.studentName,
+    required this.tests,
+  });
+
+  final int studentId;
+  final String studentName;
+  final List<MrkzTestResultRecord> tests;
+
+  factory MrkzTestsPage.fromJson(Map<String, dynamic> json) {
+    final testsJson = json['tests'] as List<dynamic>? ?? [];
+    return MrkzTestsPage(
+      studentId: json['studentId'] as int? ?? 0,
+      studentName: json['studentName'] as String? ?? '',
+      tests: testsJson
           .whereType<Map>()
-          .map((e) => MrkzTestItem.fromJson(Map<String, dynamic>.from(e)))
+          .map((e) => MrkzTestResultRecord.fromJson(Map<String, dynamic>.from(e)))
           .toList(),
     );
   }
 }
 
-class MrkzTestItem {
-  const MrkzTestItem({
-    required this.mtnName,
-    required this.score,
-    this.itemOrder = 0,
+class SaveMrkzTestResultRequest {
+  const SaveMrkzTestResultRequest({
+    required this.testDefinitionId,
+    required this.mistakeCount,
+    this.notes,
   });
 
-  final String mtnName;
-  final double score;
-  final int itemOrder;
-
-  String get displayScore => _formatScore(score);
+  final int testDefinitionId;
+  final int mistakeCount;
+  final String? notes;
 
   Map<String, dynamic> toJson() => {
-        'mtnName': mtnName,
-        'score': score,
-      };
-
-  factory MrkzTestItem.fromJson(Map<String, dynamic> json) {
-    return MrkzTestItem(
-      mtnName: json['mtnName'] as String? ?? '',
-      score: _toDouble(json['score']),
-      itemOrder: json['itemOrder'] as int? ?? 0,
-    );
-  }
-}
-
-class SaveMrkzTestRequest {
-  const SaveMrkzTestRequest({required this.items, this.testDate});
-
-  final DateTime? testDate;
-  final List<MrkzTestItem> items;
-
-  Map<String, dynamic> toJson() => {
-        if (testDate != null) 'testDate': testDate!.toIso8601String(),
-        'items': items.map((i) => i.toJson()).toList(),
+        'testDefinitionId': testDefinitionId,
+        'mistakeCount': mistakeCount,
+        if (notes != null && notes!.trim().isNotEmpty) 'notes': notes!.trim(),
       };
 }
 
-class MrkzTestGrades {
-  static String calculate(double averageScore) {
-    if (averageScore >= 90) return 'ممتاز';
-    if (averageScore >= 80) return 'جيد جدا';
-    if (averageScore >= 70) return 'جيد';
-    if (averageScore >= 60) return 'متوسط';
-    return 'ضعيف';
-  }
+double calculateMrkzFinalScore({
+  required double totalScore,
+  required int mistakeCount,
+  required double errorWeight,
+}) {
+  final deducted = mistakeCount * errorWeight;
+  final result = totalScore - deducted;
+  if (result < 0) return 0;
+  return double.parse(result.toStringAsFixed(2));
 }
 
 double _toDouble(dynamic value) {

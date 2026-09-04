@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:masged_parent_app/core/theme/app_colors.dart';
 import 'package:masged_parent_app/core/theme/app_fonts.dart';
@@ -27,34 +26,25 @@ class MrkzTestPage extends ConsumerStatefulWidget {
   ConsumerState<MrkzTestPage> createState() => _MrkzTestPageState();
 }
 
-class _MatnRowControllers {
-  _MatnRowControllers()
-      : name = TextEditingController(),
-        score = TextEditingController();
-
-  final TextEditingController name;
-  final TextEditingController score;
-
-  void dispose() {
-    name.dispose();
-    score.dispose();
-  }
-}
-
 class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
-  final _rows = <_MatnRowControllers>[_MatnRowControllers()];
+  MrkzTestDefinitionOption? _selectedDefinition;
+  int _mistakeCount = 0;
+  final _notesController = TextEditingController();
+  final _totalScoreController = TextEditingController();
+  final _finalScoreController = TextEditingController();
   bool _isSaving = false;
-  int? _downloadingTestId;
+  int? _downloadingResultId;
 
   @override
   void dispose() {
-    for (final row in _rows) {
-      row.dispose();
-    }
+    _notesController.dispose();
+    _totalScoreController.dispose();
+    _finalScoreController.dispose();
     super.dispose();
   }
 
   void _refresh() {
+    ref.invalidate(mrkzTestDefinitionsProvider(widget.studentId));
     ref.invalidate(mrkzTestsPageProvider(widget.studentId));
   }
 
@@ -67,70 +57,64 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
     );
   }
 
-  void _addRow() {
-    setState(() => _rows.add(_MatnRowControllers()));
-  }
-
-  void _removeRow(int index) {
-    if (_rows.length <= 1) return;
-    setState(() {
-      _rows.removeAt(index).dispose();
-    });
-  }
-
   void _resetForm() {
-    for (final row in _rows) {
-      row.dispose();
-    }
     setState(() {
-      _rows
-        ..clear()
-        ..add(_MatnRowControllers());
+      _selectedDefinition = null;
+      _mistakeCount = 0;
+      _notesController.clear();
+      _totalScoreController.clear();
+      _finalScoreController.clear();
     });
   }
 
-  List<MrkzTestItem>? _collectItems() {
-    final items = <MrkzTestItem>[];
-    for (final row in _rows) {
-      final name = row.name.text.trim();
-      final scoreText = row.score.text.trim();
-      if (name.isEmpty && scoreText.isEmpty) continue;
+  void _onDefinitionSelected(MrkzTestDefinitionOption? definition) {
+    setState(() {
+      _selectedDefinition = definition;
+      _mistakeCount = 0;
+      _totalScoreController.text =
+          definition == null ? '' : _formatScore(definition.totalScore);
+      _updateFinalScoreField();
+    });
+  }
 
-      if (name.isEmpty) {
-        _showMessage('يرجى إدخال اسم المتن', isError: true);
-        return null;
-      }
+  void _incrementMistake() {
+    setState(() {
+      _mistakeCount++;
+      _updateFinalScoreField();
+    });
+  }
 
-      final score = double.tryParse(scoreText);
-      if (score == null) {
-        _showMessage('يرجى إدخال درجة صحيحة لـ "$name"', isError: true);
-        return null;
-      }
-      if (score < 0 || score > 100) {
-        _showMessage('الدرجة يجب أن تكون بين 0 و 100', isError: true);
-        return null;
-      }
+  void _updateFinalScoreField() {
+    final score = _finalScore;
+    _finalScoreController.text = score == null ? '' : _formatScore(score);
+  }
 
-      items.add(MrkzTestItem(mtnName: name, score: score));
-    }
-
-    if (items.isEmpty) {
-      _showMessage('أضف متناً واحداً على الأقل مع درجته', isError: true);
-      return null;
-    }
-
-    return items;
+  double? get _finalScore {
+    final definition = _selectedDefinition;
+    if (definition == null) return null;
+    return calculateMrkzFinalScore(
+      totalScore: definition.totalScore,
+      mistakeCount: _mistakeCount,
+      errorWeight: definition.errorWeight,
+    );
   }
 
   Future<void> _saveTest() async {
-    final items = _collectItems();
-    if (items == null) return;
+    final definition = _selectedDefinition;
+    if (definition == null) {
+      _showMessage('يرجى اختيار المتن', isError: true);
+      return;
+    }
 
     setState(() => _isSaving = true);
     try {
       final message = await ref.read(mrkzTestsApiProvider).createTest(
             widget.studentId,
-            SaveMrkzTestRequest(items: items),
+            SaveMrkzTestResultRequest(
+              testDefinitionId: definition.id,
+              mistakeCount: _mistakeCount,
+              notes: _notesController.text,
+            ),
           );
       _resetForm();
       _refresh();
@@ -144,16 +128,16 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
     }
   }
 
-  Future<void> _downloadCertificate(MrkzTestRecord test) async {
-    setState(() => _downloadingTestId = test.testId);
+  Future<void> _downloadCertificate(MrkzTestResultRecord test) async {
+    setState(() => _downloadingResultId = test.resultId);
     try {
-      final pdf = await ref.read(mrkzTestsApiProvider).getCertificatePdf(test.testId);
+      final pdf = await ref.read(mrkzTestsApiProvider).getCertificatePdf(test.resultId);
       await saveExportedFile(pdf.bytes, pdf.fileName);
       if (mounted) {
         _showMessage('اختر «فتح» أو «حفظ» من قائمة المشاركة');
       }
     } catch (error) {
-      final opened = await _openCertificatePdfInBrowser(test.testId);
+      final opened = await _openCertificatePdfInBrowser(test.resultId);
       if (!mounted) return;
       if (opened) {
         _showMessage('تعذر حفظ الملف، تم فتح الشهادة في المتصفح');
@@ -163,15 +147,15 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
         _showMessage('تعذر تحميل الشهادة', isError: true);
       }
     } finally {
-      if (mounted) setState(() => _downloadingTestId = null);
+      if (mounted) setState(() => _downloadingResultId = null);
     }
   }
 
-  Future<bool> _openCertificatePdfInBrowser(int testId) async {
+  Future<bool> _openCertificatePdfInBrowser(int resultId) async {
     try {
       final token = await ref.read(authStorageProvider).getToken();
       final uri = ref.read(mrkzTestsApiProvider).certificatePdfUri(
-            testId: testId,
+            resultId: resultId,
             accessToken: token,
           );
       return launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -199,6 +183,7 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
 
   @override
   Widget build(BuildContext context) {
+    final definitionsAsync = ref.watch(mrkzTestDefinitionsProvider(widget.studentId));
     final pageAsync = ref.watch(mrkzTestsPageProvider(widget.studentId));
     final displayName = widget.studentName ??
         pageAsync.maybeWhen(
@@ -225,7 +210,20 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
             children: [
               _buildHeader(displayName),
               const SizedBox(height: 24),
-              _buildAddTestForm(),
+              definitionsAsync.when(
+                data: (definitions) => _buildEntryForm(definitions),
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+                error: (error, _) => _buildErrorState(
+                  error is ApiException
+                      ? error.message
+                      : 'تعذر تحميل قائمة المتون',
+                ),
+              ),
               const SizedBox(height: 24),
               Text(
                 'سجل الاختبارات',
@@ -295,7 +293,23 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
     );
   }
 
-  Widget _buildAddTestForm() {
+  Widget _buildEntryForm(List<MrkzTestDefinitionOption> definitions) {
+    if (definitions.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          'لا توجد اختبارات مفعّلة مخصصة لك',
+          textAlign: TextAlign.center,
+          style: AppFonts.cairo(color: AppColors.textSecondary),
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -321,17 +335,71 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
             ),
           ),
           const SizedBox(height: 16),
-          for (var i = 0; i < _rows.length; i++) ...[
-            if (i > 0) const SizedBox(height: 12),
-            _buildMatnRow(i),
-          ],
+          Autocomplete<MrkzTestDefinitionOption>(
+            displayStringForOption: (option) => option.mtnName,
+            optionsBuilder: (textEditingValue) {
+              final query = textEditingValue.text.trim().toLowerCase();
+              if (query.isEmpty) return definitions;
+              return definitions
+                  .where((item) => item.mtnName.toLowerCase().contains(query));
+            },
+            onSelected: _onDefinitionSelected,
+            fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+              if (_selectedDefinition != null &&
+                  controller.text != _selectedDefinition!.mtnName) {
+                controller.text = _selectedDefinition!.mtnName;
+              }
+              return CustomTextField(
+                label: 'المتن',
+                hint: 'ابحث واختر المتن',
+                controller: controller,
+                focusNode: focusNode,
+                onChanged: (_) {
+                  if (_selectedDefinition != null) {
+                    setState(() => _selectedDefinition = null);
+                  }
+                },
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            label: 'الدرجة الكلية',
+            hint: '—',
+            controller: _totalScoreController,
+            readOnly: true,
+          ),
           const SizedBox(height: 16),
           CustomButton(
-            text: 'إضافة متن',
-            icon: Icons.add,
+            text: _selectedDefinition == null
+                ? 'خطأ'
+                : 'خطأ (وزن: ${_formatScore(_selectedDefinition!.errorWeight)})',
+            icon: Icons.close,
             isOutlined: true,
             height: 46,
-            onPressed: _addRow,
+            onPressed: _selectedDefinition == null ? null : _incrementMistake,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'عدد الأخطاء: $_mistakeCount',
+            style: AppFonts.cairo(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            label: 'النتيجة النهائية',
+            hint: '—',
+            controller: _finalScoreController,
+            readOnly: true,
+          ),
+          const SizedBox(height: 16),
+          CustomTextField(
+            label: 'ملاحظات',
+            hint: 'ملاحظات اختيارية',
+            controller: _notesController,
+            maxLines: 3,
           ),
           const SizedBox(height: 16),
           CustomButton(
@@ -341,51 +409,6 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildMatnRow(int index) {
-    final row = _rows[index];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'متن ${index + 1}',
-                style: AppFonts.cairo(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
-            if (_rows.length > 1)
-              IconButton(
-                tooltip: 'حذف المتن',
-                visualDensity: VisualDensity.compact,
-                onPressed: () => _removeRow(index),
-                icon: const Icon(Icons.close, color: AppColors.error, size: 20),
-              ),
-          ],
-        ),
-        CustomTextField(
-          label: 'اسم المتن',
-          hint: 'أدخل اسم المتن',
-          controller: row.name,
-        ),
-        const SizedBox(height: 12),
-        CustomTextField(
-          label: 'الدرجة',
-          hint: '0 - 100',
-          controller: row.score,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^\d{0,3}(\.\d{0,2})?$')),
-          ],
-        ),
-      ],
     );
   }
 
@@ -416,7 +439,7 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
     );
   }
 
-  Widget _buildTestsTable(List<MrkzTestRecord> tests) {
+  Widget _buildTestsTable(List<MrkzTestResultRecord> tests) {
     if (tests.isEmpty) {
       return Container(
         width: double.infinity,
@@ -453,54 +476,59 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
               label: Text('التاريخ', style: AppFonts.cairo(fontWeight: FontWeight.bold)),
             ),
             DataColumn(
-              label: Text('المتون', style: AppFonts.cairo(fontWeight: FontWeight.bold)),
+              label: Text('المتن', style: AppFonts.cairo(fontWeight: FontWeight.bold)),
             ),
             DataColumn(
-              label: Text('المتوسط', style: AppFonts.cairo(fontWeight: FontWeight.bold)),
+              label: Text('الأخطاء', style: AppFonts.cairo(fontWeight: FontWeight.bold)),
+            ),
+            DataColumn(
+              label: Text('النتيجة', style: AppFonts.cairo(fontWeight: FontWeight.bold)),
             ),
             DataColumn(
               label: Text('التقدير', style: AppFonts.cairo(fontWeight: FontWeight.bold)),
+            ),
+            DataColumn(
+              label: Text('ملاحظات', style: AppFonts.cairo(fontWeight: FontWeight.bold)),
             ),
             DataColumn(
               label: Text('الشهادة', style: AppFonts.cairo(fontWeight: FontWeight.bold)),
             ),
           ],
           rows: tests.map((test) {
-            final grade = test.grade.isEmpty
-                ? MrkzTestGrades.calculate(test.averageScore)
-                : test.grade;
             return DataRow(
               cells: [
                 DataCell(Text(test.displayDate, style: AppFonts.cairo())),
-                DataCell(SizedBox(
-                  width: 180,
-                  child: Text(
-                    test.mutoonSummary,
-                    style: AppFonts.cairo(fontSize: 12),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                )),
-                DataCell(Text(test.displayAverage, style: AppFonts.cairo())),
+                DataCell(Text(test.mtnName, style: AppFonts.cairo(fontSize: 12))),
+                DataCell(Text('${test.mistakeCount}', style: AppFonts.cairo())),
+                DataCell(Text(test.displayFinalScore, style: AppFonts.cairo())),
                 DataCell(
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _gradeColor(grade).withValues(alpha: 0.1),
+                      color: _gradeColor(test.grade).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      grade,
+                      test.grade,
                       style: AppFonts.cairo(
-                        color: _gradeColor(grade),
+                        color: _gradeColor(test.grade),
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                 ),
+                DataCell(SizedBox(
+                  width: 140,
+                  child: Text(
+                    test.notes?.isNotEmpty == true ? test.notes! : '—',
+                    style: AppFonts.cairo(fontSize: 12),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )),
                 DataCell(
-                  _downloadingTestId == test.testId
+                  _downloadingResultId == test.resultId
                       ? const SizedBox(
                           width: 24,
                           height: 24,
@@ -521,5 +549,12 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
         ),
       ),
     );
+  }
+
+  String _formatScore(double score) {
+    if (score == score.roundToDouble()) {
+      return score.round().toString();
+    }
+    return score.toStringAsFixed(2).replaceFirst(RegExp(r'0+$'), '').replaceFirst(RegExp(r'\.$'), '');
   }
 }

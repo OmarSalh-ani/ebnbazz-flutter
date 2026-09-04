@@ -8,6 +8,11 @@ final mrkzTestsApiProvider = Provider<MrkzTestsApi>((ref) {
   return MrkzTestsApi(ref.watch(apiClientProvider));
 });
 
+final mrkzTestDefinitionsProvider = FutureProvider.autoDispose
+    .family<List<MrkzTestDefinitionOption>, int>((ref, studentId) {
+  return ref.watch(mrkzTestsApiProvider).getDefinitions(studentId);
+});
+
 final mrkzTestsPageProvider = FutureProvider.autoDispose
     .family<MrkzTestsPage, int>((ref, studentId) {
   return ref.watch(mrkzTestsApiProvider).getTests(studentId);
