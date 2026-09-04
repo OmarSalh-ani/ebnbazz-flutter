@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../models/mrkz_test_models.dart';
 import '../providers/mrkz_tests_providers.dart';
+import '../widgets/mrkz_test_definition_picker_sheet.dart';
 
 class MrkzTestPage extends ConsumerStatefulWidget {
   const MrkzTestPage({
@@ -84,6 +85,14 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
     });
   }
 
+  void _decrementMistake() {
+    if (_mistakeCount <= 0) return;
+    setState(() {
+      _mistakeCount--;
+      _updateFinalScoreField();
+    });
+  }
+
   void _updateFinalScoreField() {
     final score = _finalScore;
     _finalScoreController.text = score == null ? '' : _formatScore(score);
@@ -97,6 +106,12 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
       mistakeCount: _mistakeCount,
       errorWeight: definition.errorWeight,
     );
+  }
+
+  int get _deductedPoints {
+    final definition = _selectedDefinition;
+    if (definition == null) return 0;
+    return (_mistakeCount * definition.errorWeight).round();
   }
 
   Future<void> _saveTest() async {
@@ -209,7 +224,7 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(displayName),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               definitionsAsync.when(
                 data: (definitions) => _buildEntryForm(definitions),
                 loading: () => const Center(
@@ -225,17 +240,32 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
                 ),
               ),
               const SizedBox(height: 24),
-              Text(
-                'سجل الاختبارات',
-                style: AppFonts.cairo(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
+              Row(
+                children: [
+                  Text(
+                    'سجل الاختبارات',
+                    style: AppFonts.cairo(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  pageAsync.maybeWhen(
+                    data: (page) => Text(
+                      '${page.tests.length} اختبار',
+                      style: AppFonts.cairo(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    orElse: () => const SizedBox.shrink(),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               pageAsync.when(
-                data: (page) => _buildTestsTable(page.tests),
+                data: (page) => _buildHistoryList(page.tests),
                 loading: () => const Center(
                   child: Padding(
                     padding: EdgeInsets.all(32),
@@ -260,32 +290,46 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          colors: [
+            AppColors.mrkzPrimary.withValues(alpha: 0.08),
+            Colors.white,
+          ],
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        ),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: AppColors.mrkzPrimary.withValues(alpha: 0.15)),
       ),
       child: Row(
         children: [
-          const CircleAvatar(
-            radius: 25,
-            backgroundColor: AppColors.mrkzPrimaryLight,
-            child: Icon(Icons.assignment, color: AppColors.mrkzPrimary, size: 30),
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: AppColors.mrkzPrimary.withValues(alpha: 0.12),
+            child: const Icon(Icons.assignment, color: AppColors.mrkzPrimary, size: 30),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              'الطالب: $studentName',
-              style: AppFonts.cairo(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  studentName,
+                  style: AppFonts.cairo(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'تسجيل ومتابعة اختبارات المركز',
+                  style: AppFonts.cairo(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -293,22 +337,87 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
     );
   }
 
+  Future<void> _pickDefinition(List<MrkzTestDefinitionOption> definitions) async {
+    final picked = await showMrkzTestDefinitionPickerSheet(
+      context: context,
+      definitions: definitions,
+      selected: _selectedDefinition,
+    );
+    if (picked != null) {
+      _onDefinitionSelected(picked);
+    }
+  }
+
+  Widget _buildMtnPicker(List<MrkzTestDefinitionOption> definitions) {
+    final selectedName = _selectedDefinition?.mtnName;
+    final hasSelection = selectedName?.isNotEmpty == true;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'المتن',
+          style: AppFonts.cairo(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Material(
+          color: AppColors.inputFill,
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            onTap: () => _pickDefinition(definitions),
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: hasSelection
+                      ? AppColors.mrkzPrimary.withValues(alpha: 0.35)
+                      : Colors.transparent,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      hasSelection ? selectedName! : 'اضغط لاختيار المتن',
+                      style: AppFonts.cairo(
+                        fontSize: 15,
+                        fontWeight: hasSelection ? FontWeight.w600 : FontWeight.w500,
+                        color: hasSelection
+                            ? AppColors.textPrimary
+                            : AppColors.textHint,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: hasSelection ? AppColors.mrkzPrimary : AppColors.textHint,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildEntryForm(List<MrkzTestDefinitionOption> definitions) {
     if (definitions.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Text(
-          'لا توجد اختبارات مفعّلة مخصصة لك',
-          textAlign: TextAlign.center,
-          style: AppFonts.cairo(color: AppColors.textSecondary),
-        ),
+      return _buildInfoCard(
+        icon: Icons.info_outline,
+        message: 'لا توجد اختبارات مفعّلة مخصصة لك',
       );
     }
+
+    final definition = _selectedDefinition;
+    final hasAdminNotes = definition?.adminNotes?.trim().isNotEmpty == true;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -317,95 +426,322 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.mrkzPrimary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.edit_note, color: AppColors.mrkzPrimary, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'تسجيل اختبار جديد',
+                style: AppFonts.cairo(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildMtnPicker(definitions),
+          if (hasAdminNotes) ...[
+            const SizedBox(height: 16),
+            _buildAdminNotesCard(definition!.adminNotes!.trim()),
+          ],
+          if (definition != null) ...[
+            const SizedBox(height: 20),
+            _buildScoreSummary(definition),
+            const SizedBox(height: 20),
+            _buildMistakeControls(definition),
+            const SizedBox(height: 16),
+            CustomTextField(
+              label: 'النتيجة النهائية',
+              hint: '—',
+              controller: _finalScoreController,
+              readOnly: true,
+            ),
+          ] else ...[
+            const SizedBox(height: 16),
+            CustomTextField(
+              label: 'الدرجة الكلية',
+              hint: 'اختر المتن أولاً',
+              controller: _totalScoreController,
+              readOnly: true,
+            ),
+          ],
+          const SizedBox(height: 16),
+          CustomTextField(
+            label: 'ملاحظات المعلم',
+            hint: 'أضف ملاحظاتك عن أداء الطالب (اختياري)',
+            controller: _notesController,
+            maxLines: 3,
+          ),
+          const SizedBox(height: 20),
+          CustomButton(
+            text: 'حفظ الاختبار',
+            icon: Icons.save_outlined,
+            isLoading: _isSaving,
+            onPressed: _isSaving || definition == null ? null : _saveTest,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminNotesCard(String notes) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.mrkzPrimaryLight.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.mrkzPrimary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.admin_panel_settings_outlined,
+                  size: 18, color: AppColors.mrkzPrimary),
+              const SizedBox(width: 8),
+              Text(
+                'ملاحظات الإدارة',
+                style: AppFonts.cairo(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.mrkzPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
           Text(
-            'تسجيل اختبار جديد',
+            notes,
             style: AppFonts.cairo(
-              fontSize: 16,
+              fontSize: 14,
+              color: AppColors.textPrimary,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScoreSummary(MrkzTestDefinitionOption definition) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildStatChip(
+            label: 'الدرجة الكلية',
+            value: _formatScore(definition.totalScore),
+            icon: Icons.star_outline,
+            color: AppColors.mrkzPrimary,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _buildStatChip(
+            label: 'وزن الخطأ',
+            value: _formatScore(definition.errorWeight),
+            icon: Icons.remove_circle_outline,
+            color: AppColors.error,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _buildStatChip(
+            label: 'المخصوم',
+            value: '$_deductedPoints',
+            icon: Icons.trending_down,
+            color: AppColors.warning,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatChip({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: AppFonts.cairo(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: AppFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMistakeControls(MrkzTestDefinitionOption definition) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'تسجيل الأخطاء',
+            style: AppFonts.cairo(
+              fontSize: 14,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 16),
-          Autocomplete<MrkzTestDefinitionOption>(
-            displayStringForOption: (option) => option.mtnName,
-            optionsBuilder: (textEditingValue) {
-              final query = textEditingValue.text.trim().toLowerCase();
-              if (query.isEmpty) return definitions;
-              return definitions
-                  .where((item) => item.mtnName.toLowerCase().contains(query));
-            },
-            onSelected: _onDefinitionSelected,
-            fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-              if (_selectedDefinition != null &&
-                  controller.text != _selectedDefinition!.mtnName) {
-                controller.text = _selectedDefinition!.mtnName;
-              }
-              return CustomTextField(
-                label: 'المتن',
-                hint: 'ابحث واختر المتن',
-                controller: controller,
-                focusNode: focusNode,
-                onChanged: (_) {
-                  if (_selectedDefinition != null) {
-                    setState(() => _selectedDefinition = null);
-                  }
-                },
-              );
-            },
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            label: 'الدرجة الكلية',
-            hint: '—',
-            controller: _totalScoreController,
-            readOnly: true,
-          ),
-          const SizedBox(height: 16),
-          CustomButton(
-            text: _selectedDefinition == null
-                ? 'خطأ'
-                : 'خطأ (وزن: ${_formatScore(_selectedDefinition!.errorWeight)})',
-            icon: Icons.close,
-            isOutlined: true,
-            height: 46,
-            onPressed: _selectedDefinition == null ? null : _incrementMistake,
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
-            'عدد الأخطاء: $_mistakeCount',
-            style: AppFonts.cairo(
-              fontSize: 14,
-              color: AppColors.textSecondary,
+            'كل خطأ يخصم ${_formatScore(definition.errorWeight)} درجة',
+            style: AppFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildMistakeActionButton(
+                icon: Icons.remove,
+                label: 'استرجاع',
+                color: AppColors.textSecondary,
+                enabled: _mistakeCount > 0,
+                onTap: _decrementMistake,
+              ),
+              const SizedBox(width: 20),
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _mistakeCount > 0
+                      ? AppColors.error.withValues(alpha: 0.1)
+                      : Colors.grey.shade100,
+                  border: Border.all(
+                    color: _mistakeCount > 0
+                        ? AppColors.error.withValues(alpha: 0.3)
+                        : Colors.grey.shade300,
+                    width: 2,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '$_mistakeCount',
+                  style: AppFonts.cairo(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: _mistakeCount > 0 ? AppColors.error : AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 20),
+              _buildMistakeActionButton(
+                icon: Icons.add,
+                label: 'خطأ',
+                color: AppColors.error,
+                enabled: true,
+                onTap: _incrementMistake,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMistakeActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: enabled ? onTap : null,
+      borderRadius: BorderRadius.circular(12),
+      child: Opacity(
+        opacity: enabled ? 1 : 0.4,
+        child: Column(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: color.withValues(alpha: 0.25)),
+              ),
+              child: Icon(icon, color: color),
             ),
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            label: 'النتيجة النهائية',
-            hint: '—',
-            controller: _finalScoreController,
-            readOnly: true,
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            label: 'ملاحظات',
-            hint: 'ملاحظات اختيارية',
-            controller: _notesController,
-            maxLines: 3,
-          ),
-          const SizedBox(height: 16),
-          CustomButton(
-            text: 'حفظ',
-            isLoading: _isSaving,
-            onPressed: _isSaving ? null : _saveTest,
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: AppFonts.cairo(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard({required IconData icon, required String message}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: AppColors.textSecondary, size: 36),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: AppFonts.cairo(color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -439,114 +775,172 @@ class _MrkzTestPageState extends ConsumerState<MrkzTestPage> {
     );
   }
 
-  Widget _buildTestsTable(List<MrkzTestResultRecord> tests) {
+  Widget _buildHistoryList(List<MrkzTestResultRecord> tests) {
     if (tests.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Text(
-          'لا توجد اختبارات مسجلة',
-          textAlign: TextAlign.center,
-          style: AppFonts.cairo(color: AppColors.textSecondary),
-        ),
+      return _buildInfoCard(
+        icon: Icons.history,
+        message: 'لا توجد اختبارات مسجلة بعد',
       );
     }
 
+    return Column(
+      children: tests.map(_buildHistoryCard).toList(),
+    );
+  }
+
+  Widget _buildHistoryCard(MrkzTestResultRecord test) {
+    final isDownloading = _downloadingResultId == test.resultId;
+    final teacherNotes = test.notes?.trim();
+
     return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 5,
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          columns: [
-            DataColumn(
-              label: Text('التاريخ', style: AppFonts.cairo(fontWeight: FontWeight.bold)),
-            ),
-            DataColumn(
-              label: Text('المتن', style: AppFonts.cairo(fontWeight: FontWeight.bold)),
-            ),
-            DataColumn(
-              label: Text('الأخطاء', style: AppFonts.cairo(fontWeight: FontWeight.bold)),
-            ),
-            DataColumn(
-              label: Text('النتيجة', style: AppFonts.cairo(fontWeight: FontWeight.bold)),
-            ),
-            DataColumn(
-              label: Text('التقدير', style: AppFonts.cairo(fontWeight: FontWeight.bold)),
-            ),
-            DataColumn(
-              label: Text('ملاحظات', style: AppFonts.cairo(fontWeight: FontWeight.bold)),
-            ),
-            DataColumn(
-              label: Text('الشهادة', style: AppFonts.cairo(fontWeight: FontWeight.bold)),
-            ),
-          ],
-          rows: tests.map((test) {
-            return DataRow(
-              cells: [
-                DataCell(Text(test.displayDate, style: AppFonts.cairo())),
-                DataCell(Text(test.mtnName, style: AppFonts.cairo(fontSize: 12))),
-                DataCell(Text('${test.mistakeCount}', style: AppFonts.cairo())),
-                DataCell(Text(test.displayFinalScore, style: AppFonts.cairo())),
-                DataCell(
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _gradeColor(test.grade).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      test.grade,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      test.mtnName,
                       style: AppFonts.cairo(
-                        color: _gradeColor(test.grade),
-                        fontSize: 12,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
                       ),
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      test.displayDate,
+                      style: AppFonts.cairo(fontSize: 12, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: _gradeColor(test.grade).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  test.grade,
+                  style: AppFonts.cairo(
+                    color: _gradeColor(test.grade),
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                DataCell(SizedBox(
-                  width: 140,
-                  child: Text(
-                    test.notes?.isNotEmpty == true ? test.notes! : '—',
-                    style: AppFonts.cairo(fontSize: 12),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _buildHistoryMeta('الأخطاء', '${test.mistakeCount}'),
+              const SizedBox(width: 16),
+              _buildHistoryMeta('النتيجة', test.displayFinalScore),
+              const SizedBox(width: 16),
+              _buildHistoryMeta('من', _formatScore(test.totalScore)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ملاحظات المعلم',
+                  style: AppFonts.cairo(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textSecondary,
                   ),
-                )),
-                DataCell(
-                  _downloadingResultId == test.resultId
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : IconButton(
-                          tooltip: 'طباعة الشهادة',
-                          icon: const Icon(
-                            Icons.print_outlined,
-                            color: AppColors.mrkzPrimary,
-                          ),
-                          onPressed: () => _downloadCertificate(test),
-                        ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  teacherNotes?.isNotEmpty == true ? teacherNotes! : 'لا توجد ملاحظات',
+                  style: AppFonts.cairo(
+                    fontSize: 14,
+                    color: teacherNotes?.isNotEmpty == true
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary,
+                    height: 1.5,
+                  ),
                 ),
               ],
-            );
-          }).toList(),
-        ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: isDownloading ? null : () => _downloadCertificate(test),
+              icon: isDownloading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.download_outlined, size: 20),
+              label: Text(
+                isDownloading ? 'جاري التحميل...' : 'تحميل الشهادة',
+                style: AppFonts.cairo(fontWeight: FontWeight.w600),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.mrkzPrimary,
+                side: BorderSide(color: AppColors.mrkzPrimary.withValues(alpha: 0.5)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistoryMeta(String label, String value) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: AppFonts.cairo(fontSize: 11, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: AppFonts.cairo(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
       ),
     );
   }

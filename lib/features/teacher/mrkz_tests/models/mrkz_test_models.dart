@@ -4,12 +4,14 @@ class MrkzTestDefinitionOption {
     required this.mtnName,
     required this.totalScore,
     required this.errorWeight,
+    this.adminNotes,
   });
 
   final int id;
   final String mtnName;
   final double totalScore;
   final double errorWeight;
+  final String? adminNotes;
 
   factory MrkzTestDefinitionOption.fromJson(Map<String, dynamic> json) {
     return MrkzTestDefinitionOption(
@@ -17,6 +19,7 @@ class MrkzTestDefinitionOption {
       mtnName: json['mtnName'] as String? ?? '',
       totalScore: _toDouble(json['totalScore']),
       errorWeight: _toDouble(json['errorWeight']),
+      adminNotes: json['notes'] as String?,
     );
   }
 }
