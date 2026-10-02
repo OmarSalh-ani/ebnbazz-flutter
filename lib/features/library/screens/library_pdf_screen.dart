@@ -1,10 +1,11 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:masged_parent_app/core/theme/app_fonts.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pdfrx/pdfrx.dart';
+import 'package:pdfx/pdfx.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -21,6 +22,35 @@ class LibraryPdfScreen extends StatefulWidget {
 
 class _LibraryPdfScreenState extends State<LibraryPdfScreen> {
   bool _downloading = false;
+  PdfControllerPinch? _pdfController;
+
+  @override
+  void initState() {
+    super.initState();
+    final url = widget.release.downloadLink.trim();
+    if (url.isEmpty) return;
+    _pdfController = PdfControllerPinch(document: _openPdf(url));
+  }
+
+  Future<PdfDocument> _openPdf(String url) async {
+    final response = await Dio().get<List<int>>(
+      url,
+      options: Options(responseType: ResponseType.bytes),
+    );
+    final bytes = response.data;
+    if (bytes == null || bytes.isEmpty) {
+      throw const FormatException('empty pdf');
+    }
+    return PdfDocument.openData(
+      bytes is Uint8List ? bytes : Uint8List.fromList(bytes),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pdfController?.dispose();
+    super.dispose();
+  }
 
   Future<void> _downloadAndShare() async {
     final link = widget.release.downloadLink.trim();
@@ -118,7 +148,27 @@ class _LibraryPdfScreenState extends State<LibraryPdfScreen> {
                   ),
                 ),
               )
-            : PdfViewer.uri(Uri.parse(url)),
+            : PdfViewPinch(
+                controller: _pdfController!,
+                builders: PdfViewPinchBuilders<DefaultBuilderOptions>(
+                  options: const DefaultBuilderOptions(),
+                  documentLoaderBuilder: (_) => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                  pageLoaderBuilder: (_) => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                  errorBuilder: (_, __) => Center(
+                    child: Text(
+                      'تعذر فتح الملف',
+                      style: AppFonts.cairo(
+                        color: AppColors.textSecondary,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
       ),
     );
   }
