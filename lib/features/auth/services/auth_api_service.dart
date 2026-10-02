@@ -155,6 +155,17 @@ class AuthApiService {
     }
   }
 
+  Future<void> changePassword(String newPassword) async {
+    try {
+      await _dio.post(
+        '/api/auth/change-password',
+        data: {'newPassword': newPassword},
+      );
+    } on DioException catch (e) {
+      throw e.error is ApiException ? e.error as ApiException : ApiException.fromDioException(e);
+    }
+  }
+
   Future<void> deleteAccount(String password) async {
     try {
       await _dio.post(

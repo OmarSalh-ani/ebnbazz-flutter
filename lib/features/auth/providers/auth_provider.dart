@@ -256,6 +256,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
 
+  Future<void> changePassword(String newPassword) async {
+    await _authApi.changePassword(newPassword);
+  }
+
   Future<void> deleteAccount(String password) async {
     await AuthApiService().deleteAccount(password);
     await logout();

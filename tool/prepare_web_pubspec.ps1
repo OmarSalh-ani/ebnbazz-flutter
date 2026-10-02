@@ -29,7 +29,7 @@ if ($Action -eq 'strip') {
 }
 
 if (-not (Test-Path $backupPath)) {
-    Write-Warning "No pubspec backup found — skipping restore."
+    Write-Warning 'No pubspec backup found - skipping restore.'
     exit 0
 }
 

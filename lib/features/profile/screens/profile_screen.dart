@@ -14,6 +14,7 @@ import '../../../shared/widgets/student_avatar.dart';
 import '../../../shared/widgets/privacy_policy_link.dart';
 import '../../../shared/widgets/settings_option_tile.dart';
 import '../../../shared/widgets/delete_account_dialog.dart';
+import '../widgets/change_password_dialog.dart';
 import '../../../core/services/app_review_service.dart';
 import '../models/parent_followup_model.dart';
 import '../providers/parent_followup_provider.dart';
@@ -397,6 +398,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             const SizedBox(height: 12),
             const PrivacyPolicyLink(),
+            const SizedBox(height: 12),
+            SettingsOptionTile(
+              icon: Icons.lock_outline_rounded,
+              title: 'تغيير كلمة المرور',
+              subtitle: 'تحديث كلمة المرور الخاصة بحسابك',
+              onTap: () => showParentChangePasswordDialog(context, ref),
+            ),
             const SizedBox(height: 12),
             SettingsOptionTile(
               icon: Icons.delete_outline_rounded,
