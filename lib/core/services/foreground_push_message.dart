@@ -26,6 +26,10 @@ class ForegroundPushMessage {
 
     this.parentPhone,
 
+    this.isStudentPlan = false,
+
+    this.planStudentId,
+
   });
 
 
@@ -49,6 +53,10 @@ class ForegroundPushMessage {
   final String? studentName;
 
   final String? parentPhone;
+
+  final bool isStudentPlan;
+
+  final int? planStudentId;
 
 }
 

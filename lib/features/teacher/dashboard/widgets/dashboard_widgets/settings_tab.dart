@@ -19,6 +19,7 @@ import 'logout_confirmation_dialog.dart';
 import 'support_dialog.dart';
 import '../../../auth/providers/auth_providers.dart';
 import '../../screens/teacher_admin_notes_screen.dart';
+import '../../../plans/screens/plan_levels_screen.dart';
 
 class SettingsTab extends ConsumerWidget {
   const SettingsTab({
@@ -153,6 +154,19 @@ class SettingsTab extends ConsumerWidget {
               Navigator.of(context).push<void>(
                 MaterialPageRoute<void>(
                   builder: (_) => const TeacherAdminNotesScreen(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          SettingsOptionTile(
+            icon: Icons.layers_outlined,
+            title: 'مستويات الخطة والخطط الجاهزة',
+            subtitle: 'إنشاء وإدارة مستويات الحفظ الخاصة بك',
+            onTap: () {
+              Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(
+                  builder: (_) => const PlanLevelsScreen(),
                 ),
               );
             },

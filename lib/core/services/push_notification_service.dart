@@ -28,6 +28,7 @@ import '../../features/auth/providers/auth_provider.dart';
 
 import '../../features/chat/providers/active_chat_conversation.dart';
 import '../../features/chat/utils/chat_notification_launcher.dart';
+import '../../features/children/utils/student_plan_notification_launcher.dart';
 
 import '../../features/teacher/auth/models/auth_user.dart';
 import '../../features/teacher/auth/providers/auth_providers.dart';
@@ -400,6 +401,18 @@ class PushNotificationService {
 
           _openAdhkar(payload.substring(7));
 
+        } else if (payload.startsWith('student_plan:')) {
+
+          final studentId = int.tryParse(payload.substring(13));
+
+          final ref = _ref;
+
+          if (ref != null && studentId != null) {
+
+            openStudentPlanFromPushNotification(ref, studentId: studentId);
+
+          }
+
         }
 
       },
@@ -508,6 +521,8 @@ class PushNotificationService {
 
     final isChat = kind == 'chat';
 
+    final isStudentPlan = kind == 'student_plan';
+
     final meetingId = isMeeting
 
         ? int.tryParse(data['meetingId']?.toString() ?? '')
@@ -515,6 +530,12 @@ class PushNotificationService {
         : null;
 
     final chatTarget = isChat ? _parseChatData(data) : null;
+
+    final planStudentId = isStudentPlan
+
+        ? int.tryParse(data['studentId']?.toString() ?? '')
+
+        : null;
 
     if (isChat && chatTarget != null) {
       if (ActiveChatConversationTracker.isActive(
@@ -549,6 +570,10 @@ class PushNotificationService {
 
       parentPhone: chatTarget?.parentPhone,
 
+      isStudentPlan: isStudentPlan,
+
+      planStudentId: planStudentId,
+
     );
 
   }
@@ -576,6 +601,22 @@ class PushNotificationService {
       final target = _parseChatData(data);
 
       if (target != null) _openChat(target);
+
+      return;
+
+    }
+
+    if (kind == 'student_plan') {
+
+      final ref = _ref;
+
+      final studentId = int.tryParse(data['studentId']?.toString() ?? '');
+
+      if (ref != null && studentId != null) {
+
+        openStudentPlanFromPushNotification(ref, studentId: studentId);
+
+      }
 
     }
 

@@ -19,6 +19,7 @@ import 'core/services/push_notification_service.dart';
 import 'features/video_call/utils/parent_video_call_launcher.dart';
 import 'features/chat/utils/chat_notification_launcher.dart';
 import 'features/adhkar/utils/adhkar_notification_launcher.dart';
+import 'features/children/utils/student_plan_notification_launcher.dart';
 import 'features/adhkar/services/adhkar_notification_service.dart';
 import 'features/adhkar/services/adhkar_progress_service.dart';
 import 'features/teacher/session/teacher_session_cache.dart';
@@ -191,6 +192,14 @@ class _MasgedUnifiedAppState extends ConsumerState<MasgedUnifiedApp>
                   onChatTap: (target) {
                     unawaited(openChatFromPushNotification(ref, target));
                   },
+                  onStudentPlanTap: ({required studentId}) {
+                    unawaited(
+                      openStudentPlanFromPushNotification(
+                        ref,
+                        studentId: studentId,
+                      ),
+                    );
+                  },
                 ),
               ),
             );
@@ -208,11 +217,13 @@ class _AppRootOverlay extends ConsumerWidget {
     required this.navigatorChild,
     required this.onMeetingTap,
     required this.onChatTap,
+    required this.onStudentPlanTap,
   });
 
   final Widget? navigatorChild;
   final void Function(int meetingId) onMeetingTap;
   final void Function(ChatPushTarget target) onChatTap;
+  final void Function({required int studentId}) onStudentPlanTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -229,6 +240,7 @@ class _AppRootOverlay extends ConsumerWidget {
         ForegroundPushBanner(
           onMeetingTap: onMeetingTap,
           onChatTap: onChatTap,
+          onStudentPlanTap: onStudentPlanTap,
         ),
         if (!isOnline)
           const Positioned(

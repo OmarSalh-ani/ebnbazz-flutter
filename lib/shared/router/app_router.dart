@@ -400,7 +400,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.childProfile,
             builder: (context, state) {
               final child = state.extra as ChildModel;
-              return ChildProfileScreen(child: child);
+              final scrollToPlan = state.uri.queryParameters['focus'] == 'plan';
+              return ChildProfileScreen(child: child, scrollToPlan: scrollToPlan);
             },
           ),
           GoRoute(

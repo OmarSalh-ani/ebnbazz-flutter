@@ -8,6 +8,8 @@ import '../../providers/dashboard_providers.dart';
 import 'empty_students.dart';
 import 'student_search_field.dart';
 import 'students_list.dart';
+import '../../../plans/screens/bulk_plan_assignment_screen.dart';
+import '../../../plans/screens/plan_levels_screen.dart';
 
 class StudentsTab extends ConsumerWidget {
   const StudentsTab({
@@ -69,6 +71,42 @@ class StudentsTab extends ConsumerWidget {
                       color: AppColors.textPrimary,
                     ),
                   ),
+                ),
+                if (data!.students.isNotEmpty)
+                  TextButton.icon(
+                    onPressed: () async {
+                      final saved = await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BulkPlanAssignmentScreen(
+                            students: data!.students,
+                          ),
+                        ),
+                      );
+                      if (saved == true && context.mounted) {
+                        ref.read(dashboardPageProvider.notifier).refresh();
+                      }
+                    },
+                    icon: const Icon(Icons.group_add_rounded, size: 20),
+                    label: Text(
+                      'خطة جماعية',
+                      style: AppFonts.cairo(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                IconButton(
+                  tooltip: 'مستويات الخطة',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PlanLevelsScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.tune_rounded),
                 ),
               ],
             ),

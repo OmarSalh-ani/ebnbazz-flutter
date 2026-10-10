@@ -9,11 +9,17 @@ import '../models/child_model.dart';
 import '../providers/student_profile_provider.dart';
 import 'edit_child_profile_screen.dart';
 import 'parent_memorizing_archive_screen.dart';
+import '../widgets/child_plan_table_section.dart';
 
 class ChildProfileScreen extends ConsumerWidget {
   final ChildModel child;
+  final bool scrollToPlan;
 
-  const ChildProfileScreen({super.key, required this.child});
+  const ChildProfileScreen({
+    super.key,
+    required this.child,
+    this.scrollToPlan = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -120,6 +126,17 @@ class ChildProfileScreen extends ConsumerWidget {
         child: Column(
           children: [
             _buildProfileHeader(profile),
+            const SizedBox(height: 32),
+            _PlanScrollTarget(
+              enabled: scrollToPlan,
+              child: Column(
+                children: [
+                  _buildSectionTitle('جدول الخطة', Icons.table_chart_rounded),
+                  const SizedBox(height: 12),
+                  ChildPlanTableSection(studentId: profile.id),
+                ],
+              ),
+            ),
             const SizedBox(height: 32),
             _buildMemorizingArchiveSection(context, profile),
             const SizedBox(height: 32),
@@ -544,5 +561,46 @@ class ChildProfileScreen extends ConsumerWidget {
         ],
       ),
     ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.1);
+  }
+}
+
+class _PlanScrollTarget extends StatefulWidget {
+  const _PlanScrollTarget({required this.enabled, required this.child});
+
+  final bool enabled;
+  final Widget child;
+
+  @override
+  State<_PlanScrollTarget> createState() => _PlanScrollTargetState();
+}
+
+class _PlanScrollTargetState extends State<_PlanScrollTarget> {
+  final _key = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.enabled) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scroll();
+      Future<void>.delayed(const Duration(milliseconds: 400), () {
+        if (mounted) _scroll();
+      });
+    });
+  }
+
+  void _scroll() {
+    final target = _key.currentContext;
+    if (target == null || !target.mounted) return;
+    Scrollable.ensureVisible(
+      target,
+      duration: const Duration(milliseconds: 350),
+      alignment: 0.05,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return KeyedSubtree(key: _key, child: widget.child);
   }
 }

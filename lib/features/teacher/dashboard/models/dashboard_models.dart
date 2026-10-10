@@ -75,6 +75,8 @@ class StudentListItem {
     this.hasLearningDifficulties = false,
     this.warningCount = 0,
     this.parentQuestionsCount = 0,
+    this.planLevelName = '',
+    this.planLevelId,
   });
 
   final int id;
@@ -92,6 +94,8 @@ class StudentListItem {
   final bool hasLearningDifficulties;
   final int warningCount;
   final int parentQuestionsCount;
+  final String planLevelName;
+  final int? planLevelId;
 
   String get todayStatusLabel {
     if (isPresentToday == 'منصرف') {
@@ -123,6 +127,8 @@ class StudentListItem {
       hasLearningDifficulties: json['hasLearningDifficulties'] as bool? ?? false,
       warningCount: json['warningCount'] as int? ?? 0,
       parentQuestionsCount: json['parentQuestionsCount'] as int? ?? 0,
+      planLevelName: json['planLevelName'] as String? ?? '',
+      planLevelId: json['planLevelId'] as int?,
     );
   }
 

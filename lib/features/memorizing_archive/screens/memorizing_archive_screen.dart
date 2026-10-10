@@ -103,10 +103,10 @@ class _MemorizingArchiveScreenState extends ConsumerState<MemorizingArchiveScree
     return AppColors.primary;
   }
 
-  Color _doneColor(String isDone) {
-    final normalized = isDone.trim();
-    if (normalized == 'نعم') return AppColors.success;
-    return AppColors.textSecondary;
+  String _surahLabel(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return '—';
+    return trimmed.startsWith('سورة') ? trimmed : 'سورة $trimmed';
   }
 
   @override
@@ -144,7 +144,7 @@ class _MemorizingArchiveScreenState extends ConsumerState<MemorizingArchiveScree
                 controller: _searchController,
                 style: AppFonts.cairo(fontSize: 14),
                 decoration: InputDecoration(
-                  hintText: 'بحث بسورة البداية...',
+                  hintText: 'بحث باسم السورة...',
                   hintStyle: AppFonts.cairo(color: AppColors.textHint),
                   prefixIcon: const Icon(Icons.search_rounded),
                   suffixIcon: _surahSearch.isNotEmpty
@@ -222,7 +222,6 @@ class _MemorizingArchiveScreenState extends ConsumerState<MemorizingArchiveScree
 
   Widget _buildTile(MemorizingArchiveItem item) {
     final typeColor = _typeColor(item.theType);
-    final doneColor = _doneColor(item.isDone);
     final dateLabel = _formatDate(item.createdAt);
 
     return Container(
@@ -268,29 +267,11 @@ class _MemorizingArchiveScreenState extends ConsumerState<MemorizingArchiveScree
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _detailRow('سورة البداية', item.testFrom),
+              _detailRow('السورة', _surahLabel(item.surahName)),
               const SizedBox(height: 4),
-              _detailRow('سورة النهاية', item.testTo),
+              _detailRow('من الآية', item.testFrom),
               const SizedBox(height: 4),
-              Row(
-                children: [
-                  Text(
-                    'تم الحفظ: ',
-                    style: AppFonts.cairo(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  Text(
-                    item.isDone.isEmpty ? '—' : item.isDone,
-                    style: AppFonts.cairo(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: doneColor,
-                    ),
-                  ),
-                ],
-              ),
+              _detailRow('إلى الآية', item.testTo),
               if (item.notes != null && item.notes!.trim().isNotEmpty) ...[
                 const SizedBox(height: 6),
                 _detailRow('ملاحظات', item.notes!.trim()),

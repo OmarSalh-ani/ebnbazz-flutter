@@ -1,10 +1,12 @@
 import 'dart:developer' as developer;
 import 'package:masged_parent_app/features/teacher/dashboard/models/dashboard_models.dart';
+import 'package:masged_parent_app/features/teacher/plans/models/student_plan_models.dart';
 
 enum VoiceCommandType {
   attendance,
   attendanceExcept,
   departure,
+  assignPlan,
   unrecognized,
 }
 
@@ -25,6 +27,14 @@ class VoiceCommandResult {
   final String rawText;
   final String normalizedText;
 
+  final String? studentName;
+  final String? startSurahName;
+  final int? startFromAyah;
+  final int? startToAyah;
+  final String? endSurahName;
+  final int? endFromAyah;
+  final int? endToAyah;
+
   /// Raw names blob after "ما عدا" / "إلا" (attendanceExcept).
   final String? excludedNamesBlob;
   final List<String> excludedNamePhrases;
@@ -33,6 +43,13 @@ class VoiceCommandResult {
     required this.type,
     required this.rawText,
     required this.normalizedText,
+    this.studentName,
+    this.startSurahName,
+    this.startFromAyah,
+    this.startToAyah,
+    this.endSurahName,
+    this.endFromAyah,
+    this.endToAyah,
     this.excludedNamesBlob,
     this.excludedNamePhrases = const [],
   });
@@ -101,6 +118,13 @@ class VoiceCommandService {
       phrase: 'انصراف الطلاب',
       description: 'تسجيل انصراف جميع الطلاب',
     ),
+    VoiceCommandExample(
+      category: 'إنشاء خطة',
+      phrase:
+          'خطة لأحمد تبدأ من سورة البقرة الآية 1 للآية 5 وتنتهي بسورة النساء الآية 1 للآية 3',
+      description:
+          'إنشاء خطة حفظ للطالب من سورة البقرة (1–5) إلى سورة النساء (1–3)',
+    ),
   ];
 
   static String normalizeArabic(String text) {
@@ -151,6 +175,29 @@ class VoiceCommandService {
         rawText: text,
         normalizedText: normalized,
       );
+    }
+
+    if (normalized.contains('خطه')) {
+      final regex = RegExp(
+        r'خطه\s+(?:ل|لـ)?\s*(.*?)\s+تبدا\s+من\s+(?:سوره\s+)?(.*?)\s+(?:الايه|اية)\s+(\d+)\s+(?:للايه|الي\s+(?:الايه|اية)|الي)\s+(\d+)\s+(?:وتنتهي|تنتهي)\s+(?:بسوره|ب)?\s*(.*?)\s+(?:الايه|اية)\s+(\d+)\s+(?:للايه|الي\s+(?:الايه|اية)|الي)\s+(\d+)',
+        caseSensitive: false,
+      );
+
+      final match = regex.firstMatch(normalized);
+      if (match != null) {
+        return VoiceCommandResult(
+          type: VoiceCommandType.assignPlan,
+          rawText: text,
+          normalizedText: normalized,
+          studentName: match.group(1)?.trim(),
+          startSurahName: match.group(2)?.trim(),
+          startFromAyah: int.tryParse(match.group(3) ?? ''),
+          startToAyah: int.tryParse(match.group(4) ?? ''),
+          endSurahName: match.group(5)?.trim(),
+          endFromAyah: int.tryParse(match.group(6) ?? ''),
+          endToAyah: int.tryParse(match.group(7) ?? ''),
+        );
+      }
     }
 
     return VoiceCommandResult(
@@ -390,8 +437,49 @@ class VoiceCommandService {
         return count > 0
             ? 'تسجيل انصراف جميع الطلاب ($count طالب)'
             : 'تسجيل انصراف جميع الطلاب';
+      case VoiceCommandType.assignPlan:
+        final studentLabel =
+            resolvedStudentName ?? parsed.studentName ?? 'طالب';
+        final start = parsed.startSurahName ?? '—';
+        final end = parsed.endSurahName ?? '—';
+        final startAyah =
+            '${parsed.startFromAyah ?? 1}–${parsed.startToAyah ?? 1}';
+        final endAyah = '${parsed.endFromAyah ?? 1}–${parsed.endToAyah ?? 1}';
+        return 'إنشاء خطة لـ $studentLabel\n'
+            'من سورة $start (آية $startAyah)\n'
+            'إلى سورة $end (آية $endAyah)';
       case VoiceCommandType.unrecognized:
         return 'أمر غير معروف';
     }
+  }
+
+  static PlanSurahOption? matchSurah(
+    List<PlanSurahOption> surahs,
+    String spokenSurahName,
+  ) {
+    final normSpoken = normalizeArabic(spokenSurahName).trim();
+    if (normSpoken.isEmpty) return null;
+
+    for (final surah in surahs) {
+      final normName = normalizeArabic(surah.name).trim();
+      if (normName == normSpoken) return surah;
+    }
+
+    String stripAl(String s) => s.startsWith('ال') ? s.substring(2) : s;
+
+    final strippedSpoken = stripAl(normSpoken);
+    for (final surah in surahs) {
+      final strippedName = stripAl(normalizeArabic(surah.name).trim());
+      if (strippedName == strippedSpoken) return surah;
+    }
+
+    for (final surah in surahs) {
+      final normName = normalizeArabic(surah.name).trim();
+      if (normName.contains(normSpoken) || normSpoken.contains(normName)) {
+        return surah;
+      }
+    }
+
+    return null;
   }
 }

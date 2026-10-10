@@ -63,6 +63,7 @@ class FakeStudentsApi extends StudentsApi {
     String? searchTerm,
     int page = 1,
     int pageSize = 20,
+    bool isMrkz = false,
   }) async {
     lastSearchTerm = searchTerm;
     lastRequestedPage = page;

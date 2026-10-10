@@ -2,6 +2,7 @@ class MemorizingArchiveItem {
   const MemorizingArchiveItem({
     required this.id,
     required this.theType,
+    this.surahName = '',
     required this.testFrom,
     required this.testTo,
     required this.isDone,
@@ -11,6 +12,7 @@ class MemorizingArchiveItem {
 
   final int id;
   final String theType;
+  final String surahName;
   final String testFrom;
   final String testTo;
   final String isDone;
@@ -21,6 +23,7 @@ class MemorizingArchiveItem {
     return MemorizingArchiveItem(
       id: json['id'] as int? ?? 0,
       theType: json['theType'] as String? ?? '',
+      surahName: json['surahName'] as String? ?? '',
       testFrom: json['testFrom'] as String? ?? '',
       testTo: json['testTo'] as String? ?? '',
       isDone: json['isDone'] as String? ?? '',

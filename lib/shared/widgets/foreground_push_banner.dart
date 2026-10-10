@@ -13,10 +13,12 @@ class ForegroundPushBanner extends ConsumerStatefulWidget {
     super.key,
     this.onMeetingTap,
     this.onChatTap,
+    this.onStudentPlanTap,
   });
 
   final void Function(int meetingId)? onMeetingTap;
   final void Function(ChatPushTarget target)? onChatTap;
+  final void Function({required int studentId})? onStudentPlanTap;
 
   @override
   ConsumerState<ForegroundPushBanner> createState() =>
@@ -68,6 +70,11 @@ class _ForegroundPushBannerState extends ConsumerState<ForegroundPushBanner>
       final meetingId = message.meetingId;
       if (meetingId != null) {
         widget.onMeetingTap?.call(meetingId);
+      }
+    } else if (message.isStudentPlan) {
+      final studentId = message.planStudentId;
+      if (studentId != null) {
+        widget.onStudentPlanTap?.call(studentId: studentId);
       }
     } else if (message.isChat) {
       final teacherId = message.teacherId;

@@ -12,6 +12,9 @@ import 'package:masged_parent_app/core/utils/app_permission_helper.dart';
 import 'package:masged_parent_app/teacher_core/services/voice_command_service.dart';
 import '../../../attendance/providers/attendance_providers.dart';
 import '../../../auth/providers/auth_providers.dart';
+import '../../../plans/models/student_plan_models.dart';
+import '../../../plans/providers/student_plan_providers.dart';
+import '../../../plans/screens/student_plan_screen.dart';
 import '../../models/dashboard_models.dart';
 import '../../providers/dashboard_providers.dart';
 import '../../screens/voice_command_examples_screen.dart';
@@ -167,9 +170,24 @@ class _VoiceCommandBottomSheetState
         return;
       }
 
+      StudentListItem? selectedStudent;
       List<StudentListItem>? absentStudents;
 
-      if (parsed.type == VoiceCommandType.attendanceExcept) {
+      if (parsed.type == VoiceCommandType.assignPlan) {
+        final pageState = ref.read(dashboardPageProvider);
+        final students = pageState.valueOrNull?.students ?? [];
+        selectedStudent = await _pickStudentForVoiceCommand(
+          students: students,
+          spokenName: parsed.studentName ?? '',
+        );
+        if (!mounted) return;
+        if (selectedStudent == null) {
+          setState(() {
+            _voiceStatusMessage = 'لم يتم اختيار طالب. يمكنك المحاولة مرة أخرى.';
+          });
+          return;
+        }
+      } else if (parsed.type == VoiceCommandType.attendanceExcept) {
         final pageState = ref.read(dashboardPageProvider);
         final students = pageState.valueOrNull?.students ?? [];
         absentStudents = await _resolveAbsentStudentsForVoice(
@@ -187,6 +205,7 @@ class _VoiceCommandBottomSheetState
 
       await _executeConfirmedVoiceCommand(
         parsed: parsed,
+        selectedStudent: selectedStudent,
         absentStudents: absentStudents,
       );
     } catch (e) {
@@ -552,8 +571,208 @@ class _VoiceCommandBottomSheetState
     );
   }
 
+  Future<StudentListItem?> _pickStudentForVoiceCommand({
+    required List<StudentListItem> students,
+    required String spokenName,
+  }) async {
+    if (students.isEmpty) {
+      throw Exception('لا يوجد طلاب في الحلقة الحالية.');
+    }
+
+    final candidates = VoiceCommandService.findStudentCandidates(
+      students,
+      spokenName,
+    );
+
+    if (candidates.isEmpty) {
+      final broad = VoiceCommandService.findStudentCandidates(
+        students,
+        spokenName.split(' ').first,
+        maxResults: 8,
+      );
+      if (broad.isEmpty) {
+        throw Exception('تعذر العثور على طالب باسم "$spokenName"');
+      }
+      return _showVoiceStudentPickerDialog(
+        spokenName: spokenName,
+        candidates: broad,
+        title: 'لم نتأكد من الطالب',
+        subtitle: 'اختر الطالب الصحيح من الأسماء المشابهة:',
+      );
+    }
+
+    if (VoiceCommandService.isConfidentSingleMatch(candidates)) {
+      final confirmed = await _showVoiceStudentConfirmDialog(
+        student: candidates.first.student,
+        spokenName: spokenName,
+      );
+      if (confirmed) return candidates.first.student;
+
+      final pickerCandidates = candidates.length > 1
+          ? candidates
+          : VoiceCommandService.findStudentCandidates(
+              students,
+              spokenName,
+              maxResults: 8,
+            );
+      if (!mounted) return null;
+      return _showVoiceStudentPickerDialog(
+        spokenName: spokenName,
+        candidates: pickerCandidates,
+        title: 'اختر الطالب الصحيح',
+        subtitle: 'اختر من الأسماء المشابهة:',
+      );
+    }
+
+    return _showVoiceStudentPickerDialog(
+      spokenName: spokenName,
+      candidates: candidates,
+      title: 'تأكيد الطالب',
+      subtitle: 'وجدنا عدة طلاب بأسماء مشابهة. اختر الطالب الصحيح:',
+    );
+  }
+
+  Future<bool> _showVoiceStudentConfirmDialog({
+    required StudentListItem student,
+    required String spokenName,
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'هل هذا الطالب؟',
+          textAlign: TextAlign.right,
+          style: AppFonts.cairo(
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (spokenName.trim().isNotEmpty)
+              Text(
+                'الاسم في الأمر: "$spokenName"',
+                textAlign: TextAlign.right,
+                style: AppFonts.cairo(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            const SizedBox(height: 12),
+            _buildVoiceStudentCard(student, highlighted: true),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(
+              'ليس هذا الطالب',
+              style: AppFonts.cairo(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+            child: Text(
+              'نعم، هذا الطالب',
+              style: AppFonts.cairo(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<StudentListItem?> _showVoiceStudentPickerDialog({
+    required String spokenName,
+    required List<StudentMatchCandidate> candidates,
+    required String title,
+    required String subtitle,
+  }) async {
+    return showDialog<StudentListItem>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          title,
+          textAlign: TextAlign.right,
+          style: AppFonts.cairo(
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+          ),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                subtitle,
+                textAlign: TextAlign.right,
+                style: AppFonts.cairo(color: AppColors.textSecondary),
+              ),
+              if (spokenName.trim().isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  'بحثًا عن: "$spokenName"',
+                  textAlign: TextAlign.right,
+                  style: AppFonts.cairo(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 320),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: candidates.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (_, index) {
+                    final candidate = candidates[index];
+                    return InkWell(
+                      onTap: () =>
+                          Navigator.pop(dialogContext, candidate.student),
+                      borderRadius: BorderRadius.circular(14),
+                      child: _buildVoiceStudentCard(candidate.student),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              'إلغاء',
+              style: AppFonts.cairo(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _executeConfirmedVoiceCommand({
     required VoiceCommandResult parsed,
+    required StudentListItem? selectedStudent,
     List<StudentListItem>? absentStudents,
   }) async {
     setState(() {
@@ -663,6 +882,74 @@ class _VoiceCommandBottomSheetState
 
       Future.delayed(const Duration(milliseconds: 1500), () {
         if (mounted) Navigator.pop(context);
+      });
+    } else if (parsed.type == VoiceCommandType.assignPlan) {
+      final matchedStudent = selectedStudent!;
+
+      setState(() {
+        _voiceStatusMessage = 'جاري تحميل بيانات السور للخطة...';
+      });
+
+      final formData = await ref.read(planFormDataProvider.future);
+
+      final startSurah = VoiceCommandService.matchSurah(
+        formData.surahs,
+        parsed.startSurahName ?? '',
+      );
+      final endSurah = VoiceCommandService.matchSurah(
+        formData.surahs,
+        parsed.endSurahName ?? '',
+      );
+
+      if (startSurah == null) {
+        throw Exception(
+            'تعذر التعرف على سورة البداية "${parsed.startSurahName}"');
+      }
+      if (endSurah == null) {
+        throw Exception(
+            'تعذر التعرف على سورة النهاية "${parsed.endSurahName}"');
+      }
+
+      final rows = <PlanRowInput>[
+        PlanRowInput(
+          surahId: startSurah.id,
+          fromAyahNumber: parsed.startFromAyah ?? 1,
+          toAyahNumber: parsed.startToAyah ?? 1,
+          planType: 'حفظ',
+        ),
+        PlanRowInput(
+          surahId: endSurah.id,
+          fromAyahNumber: parsed.endFromAyah ?? 1,
+          toAyahNumber: parsed.endToAyah ?? 1,
+          planType: 'حفظ',
+        ),
+      ];
+
+      setState(() {
+        _isVoiceProcessing = false;
+        _isVoiceSuccess = true;
+        _voiceStatusMessage =
+            'تم التعرف على الطالب ${matchedStudent.name}! جاري فتح الخطة...';
+      });
+
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted) {
+          Navigator.pop(context);
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => StudentPlanScreen(
+                studentId: matchedStudent.id,
+                studentName: matchedStudent.name,
+                planLevelName: matchedStudent.planLevelName,
+                initialPendingRows: rows,
+              ),
+            ),
+          ).then((_) {
+            ref.read(dashboardPageProvider.notifier).refresh();
+          });
+        }
       });
     }
   }

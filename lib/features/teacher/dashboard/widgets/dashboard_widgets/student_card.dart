@@ -21,6 +21,7 @@ import '../../../mrkz_memorizing/screens/teacher_mrkz_memorizing_archive_screen.
 import '../../../mrkz_memorizing/widgets/mrkz_new_memorizing_review_sheet.dart';
 import '../../../mrkz_tests/screens/mrkz_test_page.dart';
 import '../../../tests/screens/tests_screen.dart';
+import '../../../plans/screens/student_plan_screen.dart';
 import '../../models/dashboard_models.dart';
 import 'small_action_btn.dart';
 import 'student_badge.dart';
@@ -208,6 +209,23 @@ class StudentCard extends ConsumerWidget {
                     );
                   },
                 ),
+                if (!isMrkz)
+                  SmallActionBtn(
+                    title: 'الخطة',
+                    icon: Icons.calendar_today,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => StudentPlanScreen(
+                            studentId: student.id,
+                            studentName: student.name,
+                            planLevelName: student.planLevelName,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 SmallActionBtn(
                   title: 'الملاحظات',
                   icon: Icons.chat,
