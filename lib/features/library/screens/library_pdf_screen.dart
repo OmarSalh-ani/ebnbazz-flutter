@@ -7,6 +7,7 @@ import 'package:masged_parent_app/core/theme/app_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../models/center_release_model.dart';
@@ -50,6 +51,18 @@ class _LibraryPdfScreenState extends State<LibraryPdfScreen> {
   void dispose() {
     _pdfController?.dispose();
     super.dispose();
+  }
+
+  Future<void> _openVoice() async {
+    final uri = Uri.tryParse(widget.release.youtubeUrl.trim());
+    if (uri == null) {
+      _showMessage('رابط الاصدار الصوتي غير متوفر');
+      return;
+    }
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched && mounted) {
+      _showMessage('تعذر فتح الاصدار الصوتي');
+    }
   }
 
   Future<void> _downloadAndShare() async {
@@ -119,6 +132,12 @@ class _LibraryPdfScreenState extends State<LibraryPdfScreen> {
           ),
           centerTitle: true,
           actions: [
+            if (widget.release.hasYoutubeUrl)
+              IconButton(
+                tooltip: 'الاصدار الصوتي',
+                onPressed: _openVoice,
+                icon: const Icon(Icons.headphones_rounded),
+              ),
             if (_downloading)
               const Padding(
                 padding: EdgeInsetsDirectional.only(end: 16),

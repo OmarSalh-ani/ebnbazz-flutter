@@ -61,9 +61,19 @@ class QuickServiceItem {
         route: AppRoutes.holyQuran,
       ),
       const QuickServiceItem(
-        label: 'المكتبة',
+        label: 'الأصدارات',
         icon: Icons.local_library_rounded,
         route: AppRoutes.library,
+      ),
+      const QuickServiceItem(
+        label: 'الشروحات',
+        icon: Icons.import_contacts_rounded,
+        route: AppRoutes.sharhs,
+      ),
+      const QuickServiceItem(
+        label: 'المنظومات',
+        icon: Icons.article_rounded,
+        route: AppRoutes.manzumas,
       ),
     ];
     final ordered =
@@ -88,9 +98,19 @@ class QuickServiceItem {
         route: AppRoutes.holyQuran,
       ),
       QuickServiceItem(
-        label: 'المكتبة',
+        label: 'الأصدارات',
         icon: Icons.local_library_rounded,
         route: AppRoutes.library,
+      ),
+      QuickServiceItem(
+        label: 'الشروحات',
+        icon: Icons.import_contacts_rounded,
+        route: AppRoutes.sharhs,
+      ),
+      QuickServiceItem(
+        label: 'المنظومات',
+        icon: Icons.article_rounded,
+        route: AppRoutes.manzumas,
       ),
     ]);
   }

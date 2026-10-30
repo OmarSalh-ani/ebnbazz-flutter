@@ -5,6 +5,7 @@ class CenterReleaseModel {
   final String title;
   final String downloadLink;
   final String thumbnailImage;
+  final String youtubeUrl;
   final DateTime uploadedAt;
 
   CenterReleaseModel({
@@ -12,8 +13,11 @@ class CenterReleaseModel {
     required this.title,
     required this.downloadLink,
     required this.thumbnailImage,
+    required this.youtubeUrl,
     required this.uploadedAt,
   });
+
+  bool get hasYoutubeUrl => youtubeUrl.trim().isNotEmpty;
 
   factory CenterReleaseModel.fromJson(Map<String, dynamic> json) {
     return CenterReleaseModel(
@@ -27,6 +31,7 @@ class CenterReleaseModel {
       thumbnailImage:
           MediaUrlHelper.resolve(json['thumbnailImage'] as String?) ??
               (json['thumbnailImage'] as String? ?? ''),
+      youtubeUrl: json['youtubeUrl'] as String? ?? '',
       uploadedAt: json['uploadedAt'] != null
           ? DateTime.parse(json['uploadedAt'].toString())
           : DateTime.now(),

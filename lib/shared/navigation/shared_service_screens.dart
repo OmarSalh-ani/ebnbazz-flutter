@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../features/home/screens/masged_news_screen.dart';
+import '../../features/library/library_kind.dart';
 import '../../features/library/screens/library_screen.dart';
 import '../../features/quran/quran_route.dart';
 import '../../features/quran/screens/quran_main_screen.dart';
@@ -17,6 +18,10 @@ Widget? sharedServiceScreenForRoute(String route, {bool teacherMode = false}) {
       return buildQuranScreen(const QuranMainScreen());
     case AppRoutes.library:
       return const LibraryScreen();
+    case AppRoutes.sharhs:
+      return const LibraryScreen(kind: LibraryKind.sharhs);
+    case AppRoutes.manzumas:
+      return const LibraryScreen(kind: LibraryKind.manzumas);
     case AppRoutes.masgedNews:
       return const MasgedNewsScreen();
     case AppRoutes.adhkar:

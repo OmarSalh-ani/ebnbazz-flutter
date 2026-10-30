@@ -33,6 +33,7 @@ import '../../features/quran/screens/surah_detail_screen.dart';
 import '../../features/home/models/news_model.dart';
 import '../../features/home/screens/masged_news_screen.dart';
 import '../../features/home/screens/news_details_screen.dart';
+import '../../features/library/library_kind.dart';
 import '../../features/library/models/center_release_model.dart';
 import '../../features/library/screens/library_pdf_screen.dart';
 import '../../features/library/screens/library_screen.dart';
@@ -66,6 +67,8 @@ const _publicServicePaths = [
   AppRoutes.zikerStats,
   AppRoutes.holyQuran,
   AppRoutes.library,
+  AppRoutes.sharhs,
+  AppRoutes.manzumas,
   AppRoutes.masgedNews,
   AppRoutes.adhkar,
 ];
@@ -76,6 +79,8 @@ bool _isPublicServiceRoute(String location) {
   if (location.startsWith(AppRoutes.surahDetail)) return true;
   if (location.startsWith(AppRoutes.newsDetails)) return true;
   if (location.startsWith(AppRoutes.libraryPdf)) return true;
+  if (location.startsWith(AppRoutes.sharhsPdf)) return true;
+  if (location.startsWith(AppRoutes.manzumasPdf)) return true;
   return false;
 }
 
@@ -119,6 +124,36 @@ List<RouteBase> _sharedIslamicServiceRoutes() {
     ),
     GoRoute(
       path: AppRoutes.libraryPdf,
+      pageBuilder: (context, state) {
+        final release = state.extra as CenterReleaseModel;
+        return NoTransitionPage<void>(
+          child: LibraryPdfScreen(release: release),
+        );
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.sharhs,
+      pageBuilder: (context, state) => const NoTransitionPage<void>(
+        child: LibraryScreen(kind: LibraryKind.sharhs),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.sharhsPdf,
+      pageBuilder: (context, state) {
+        final release = state.extra as CenterReleaseModel;
+        return NoTransitionPage<void>(
+          child: LibraryPdfScreen(release: release),
+        );
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.manzumas,
+      pageBuilder: (context, state) => const NoTransitionPage<void>(
+        child: LibraryScreen(kind: LibraryKind.manzumas),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.manzumasPdf,
       pageBuilder: (context, state) {
         final release = state.extra as CenterReleaseModel;
         return NoTransitionPage<void>(

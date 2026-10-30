@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:masged_parent_app/shared/router/app_routes.dart';
 import 'package:masged_parent_app/shared/widgets/privacy_policy_link.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../core/services/permission_onboarding_service.dart';
 import 'package:masged_parent_app/teacher_core/network/api_exception.dart';
 import 'package:masged_parent_app/core/theme/app_colors.dart';
@@ -362,8 +361,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Future<void> _browseAsGuest() async {
-    final uri = Uri.parse('https://www.ebnbazz.com');
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!mounted) return;
+    context.push(AppRoutes.library);
   }
 
   @override

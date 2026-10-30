@@ -23,6 +23,10 @@ class AppRoutes {
   static const holyQuran = '/holy-quran';
   static const library = '/library';
   static const libraryPdf = '/library-pdf';
+  static const sharhs = '/sharhs';
+  static const sharhsPdf = '/sharhs-pdf';
+  static const manzumas = '/manzumas';
+  static const manzumasPdf = '/manzumas-pdf';
   static const surahDetail = '/surah-detail/:surahNumber';
   static const masgedNews = '/masged-news';
   static const newsDetails = '/news-details/:newsId';
