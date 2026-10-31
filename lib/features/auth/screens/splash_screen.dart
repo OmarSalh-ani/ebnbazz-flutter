@@ -49,7 +49,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     }
 
     if (role == null) {
-      context.go(AppRoutes.login);
+      context.go(AppRoutes.publicHome);
       return;
     }
 
@@ -61,7 +61,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           if (!mounted) return;
           context.go(AppRoutes.teacherDashboard);
         } else {
-          context.go(AppRoutes.login);
+          context.go(AppRoutes.publicHome);
         }
       case AppRole.parent:
         if (auth.isAuthenticated) {
@@ -69,7 +69,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           if (!mounted) return;
           context.go(AppRoutes.home);
         } else {
-          context.go(AppRoutes.login);
+          context.go(AppRoutes.publicHome);
         }
     }
   }

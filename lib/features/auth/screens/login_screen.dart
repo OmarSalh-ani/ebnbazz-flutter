@@ -360,9 +360,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 
-  Future<void> _browseAsGuest() async {
+  Future<void> _goBackFromLogin() async {
     if (!mounted) return;
-    context.push(AppRoutes.library);
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(AppRoutes.publicHome);
+    }
   }
 
   @override
@@ -392,31 +396,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             },
           ),
           SafeArea(
-            child: FadeTransition(
-              opacity: _fadeAnim,
-              child: SlideTransition(
-                position: _slideAnim,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return SingleChildScrollView(
-                      physics: const ClampingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: constraints.maxHeight - 44,
-                        ),
-                        child: Column(
-                          children: [
-                            _buildHeader(),
-                            const SizedBox(height: 28),
-                            _buildFormCard(authState, isLoading),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 4,
+                  right: 8,
+                  child: IconButton(
+                    onPressed: _goBackFromLogin,
+                    tooltip: 'رجوع',
+                    icon: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: SplashColors.whiteText.withValues(alpha: 0.85),
+                    ),
+                  ),
                 ),
-              ),
+                FadeTransition(
+                  opacity: _fadeAnim,
+                  child: SlideTransition(
+                    position: _slideAnim,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          physics: const ClampingScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: constraints.maxHeight - 44,
+                            ),
+                            child: Column(
+                              children: [
+                                _buildHeader(),
+                                const SizedBox(height: 28),
+                                _buildFormCard(authState, isLoading),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -625,8 +645,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   ],
                   const SizedBox(height: 24),
                   _buildLoginButton(isLoading),
-                  const SizedBox(height: 12),
-                  _buildGuestBrowseButton(),
                   if (_isTeacher &&
                       _canUseBiometrics &&
                       _hasSavedCredentials) ...[
@@ -821,41 +839,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ),
                   ],
                 ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGuestBrowseButton() {
-    return GestureDetector(
-      onTap: _browseAsGuest,
-      child: Container(
-        height: 52,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.18),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.travel_explore_rounded,
-              color: SplashColors.whiteText.withValues(alpha: 0.75),
-              size: 22,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'تصفح كزائر',
-              style: AppFonts.cairo(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: SplashColors.whiteText.withValues(alpha: 0.85),
-              ),
-            ),
-          ],
         ),
       ),
     );

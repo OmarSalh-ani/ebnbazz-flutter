@@ -1,6 +1,7 @@
 class AppRoutes {
   static const splash = '/';
   static const productIntro = '/intro';
+  static const publicHome = '/welcome';
   static const permissionAsk = '/permission-ask';
   static const teacherDashboard = '/teacher/dashboard';
   static const login = '/login';
@@ -56,6 +57,7 @@ class AppRoutes {
     permissionAsk,
     login,
     register,
+    publicHome,
     services,
     zikerStats,
     holyQuran,

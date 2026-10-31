@@ -10,6 +10,7 @@ import '../../features/onboarding/providers/product_intro_provider.dart';
 import '../../features/auth/screens/permission_ask_page.dart';
 import '../../features/auth/screens/splash_screen.dart';
 import '../../features/onboarding/screens/product_intro_page.dart';
+import '../../features/public_home/screens/public_home_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
 import '../../features/auth/screens/otp_screen.dart';
@@ -63,6 +64,7 @@ String _pathParameter(String? value, {String fallback = ''}) {
 
 /// Shared mosque service routes reachable without parent shell auth.
 const _publicServicePaths = [
+  AppRoutes.publicHome,
   AppRoutes.services,
   AppRoutes.zikerStats,
   AppRoutes.holyQuran,
@@ -297,13 +299,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
+      if (location == AppRoutes.publicHome) {
+        if (role == AppRole.teacher && hasTeacherSession) {
+          return AppRoutes.teacherDashboard;
+        }
+        if (role != AppRole.teacher && isAuth) {
+          return AppRoutes.home;
+        }
+        return null;
+      }
+
       // Teacher flow — separate from parent shell
       if (role == AppRole.teacher) {
         if (_isPublicServiceRoute(location) || location.startsWith(AppRoutes.ziker)) {
           return null;
         }
         if (!hasTeacherSession) {
-          if (isLogin || isSplash || location == AppRoutes.register) {
+          if (isLogin ||
+              isSplash ||
+              location == AppRoutes.register ||
+              location == AppRoutes.publicHome) {
             return null;
           }
           return AppRoutes.login;
@@ -365,6 +380,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.permissionAsk,
         builder: (context, state) => const PermissionAskPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.publicHome,
+        pageBuilder: (context, state) => const NoTransitionPage<void>(
+          child: PublicHomeScreen(),
+        ),
       ),
       GoRoute(
         path: AppRoutes.login,
