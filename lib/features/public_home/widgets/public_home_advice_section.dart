@@ -28,6 +28,7 @@ class PublicHomeAdviceSection extends StatelessWidget {
 
     return IslamicPatternBackground(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           PublicSectionHeader(

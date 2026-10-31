@@ -10,6 +10,7 @@ import '../../features/onboarding/providers/product_intro_provider.dart';
 import '../../features/auth/screens/permission_ask_page.dart';
 import '../../features/auth/screens/splash_screen.dart';
 import '../../features/onboarding/screens/product_intro_page.dart';
+import '../../features/public_home/screens/public_activities_screen.dart';
 import '../../features/public_home/screens/public_home_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
@@ -72,6 +73,7 @@ const _publicServicePaths = [
   AppRoutes.sharhs,
   AppRoutes.manzumas,
   AppRoutes.masgedNews,
+  AppRoutes.activities,
   AppRoutes.adhkar,
 ];
 
@@ -179,6 +181,12 @@ List<RouteBase> _sharedIslamicServiceRoutes() {
       path: AppRoutes.masgedNews,
       pageBuilder: (context, state) => const NoTransitionPage<void>(
         child: MasgedNewsScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.activities,
+      pageBuilder: (context, state) => const NoTransitionPage<void>(
+        child: PublicActivitiesScreen(),
       ),
     ),
     GoRoute(

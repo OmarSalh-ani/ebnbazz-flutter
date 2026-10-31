@@ -30,6 +30,7 @@ class AppRoutes {
   static const manzumasPdf = '/manzumas-pdf';
   static const surahDetail = '/surah-detail/:surahNumber';
   static const masgedNews = '/masged-news';
+  static const activities = '/activities';
   static const newsDetails = '/news-details/:newsId';
   static const adhkar = '/adhkar';
   static const adhkarGroup = '/adhkar/group/:groupId';

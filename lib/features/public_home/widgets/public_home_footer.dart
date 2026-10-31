@@ -155,7 +155,7 @@ class PublicHomeFooter extends StatelessWidget {
           if (socialLinks.isNotEmpty) ...[
             const SizedBox(height: 24),
             Text(
-              'شعاراتنا',
+              'تواصل معنا',
               style: AppFonts.cairo(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
@@ -210,12 +210,30 @@ class _FooterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ActionChip(
-      label: Text(label, style: AppFonts.cairo(fontSize: 12)),
-      onPressed: onTap,
-      backgroundColor: Colors.white.withValues(alpha: 0.08),
-      side: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
-      labelStyle: AppFonts.cairo(color: Colors.white.withValues(alpha: 0.9)),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: const Color(0xFF163A6B),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.22),
+            ),
+          ),
+          child: Text(
+            label,
+            style: AppFonts.cairo(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.white.withValues(alpha: 0.95),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

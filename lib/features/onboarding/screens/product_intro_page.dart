@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/models/app_role.dart';
+import '../../../app/providers/app_role_provider.dart';
 import '../../../shared/router/app_routes.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../teacher/auth/providers/auth_providers.dart';
 import '../models/onboarding_slide.dart';
 import '../providers/product_intro_provider.dart';
 import '../theme/onboarding_colors.dart';
@@ -36,7 +40,22 @@ class _ProductIntroPageState extends ConsumerState<ProductIntroPage> {
   Future<void> _finish() async {
     await ref.read(productIntroProvider.notifier).markCompleted();
     if (!mounted) return;
-    context.go(AppRoutes.login);
+
+    final role = ref.read(appRoleProvider);
+    final auth = ref.read(authProvider);
+
+    if (role == AppRole.teacher) {
+      final teacherSession = ref.read(authControllerProvider).valueOrNull;
+      if (teacherSession != null) {
+        context.go(AppRoutes.teacherDashboard);
+        return;
+      }
+    } else if (role == AppRole.parent && auth.isAuthenticated) {
+      context.go(AppRoutes.home);
+      return;
+    }
+
+    context.go(AppRoutes.publicHome);
   }
 
   void _onNext() {

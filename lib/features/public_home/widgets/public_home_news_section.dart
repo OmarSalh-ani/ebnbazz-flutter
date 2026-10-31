@@ -24,6 +24,8 @@ class PublicHomeNewsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (items.isEmpty) return const SizedBox.shrink();
+
     final display = items.take(limit).toList();
     final dateFormat = DateFormat.yMMMMd('ar');
 
@@ -36,17 +38,7 @@ class PublicHomeNewsSection extends StatelessWidget {
             meta: PublicSectionMeta.news,
             onViewAll: () => context.push(AppRoutes.masgedNews),
           ),
-          if (display.isEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-              child: Text(
-                'لا توجد أخبار حالياً',
-                style: AppFonts.cairo(color: AppColors.textSecondary),
-                textAlign: TextAlign.center,
-              ),
-            )
-          else
-            Padding(
+          Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
               child: Column(
                 children: [

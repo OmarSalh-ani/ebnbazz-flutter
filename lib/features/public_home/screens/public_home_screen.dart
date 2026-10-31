@@ -174,7 +174,8 @@ class PublicHomeScreen extends ConsumerWidget {
                       limit: limit,
                     ),
                   ),
-                  if (reg.labels.showActivitiesSection)
+                  if (reg.labels.showActivitiesSection &&
+                      content.activities.isNotEmpty)
                     SliverToBoxAdapter(
                       child: PublicHomeActivitiesSection(
                         items: content.activities,

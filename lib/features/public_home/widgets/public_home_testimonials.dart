@@ -36,6 +36,7 @@ class _PublicHomeTestimonialsState extends State<PublicHomeTestimonials> {
       child: IslamicPatternBackground(
         opacity: 0.04,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const PublicSectionHeader(meta: PublicSectionMeta.sheikhTestimonials),

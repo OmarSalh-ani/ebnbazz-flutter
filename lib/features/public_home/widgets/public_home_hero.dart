@@ -187,9 +187,7 @@ class _PublicHomeHeroState extends State<PublicHomeHero> {
                       _HeroButton(
                         label: 'تعرف على الأنشطة',
                         filled: false,
-                        onTap: () => launchPublicUrl(
-                          '${PublicHomeConstants.websiteBase}/activities',
-                        ),
+                        onTap: () => context.push(AppRoutes.activities),
                       ),
                   ],
                 ).animate(delay: 160.ms).fadeIn().slideY(begin: 0.1, end: 0),

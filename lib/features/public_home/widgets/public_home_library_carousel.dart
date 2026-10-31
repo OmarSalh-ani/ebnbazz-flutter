@@ -51,20 +51,23 @@ class PublicHomeLibraryCarousel extends StatelessWidget {
             ),
           )
         else
-          SizedBox(
-            height: 280,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
-              itemCount: display.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 14),
-              itemBuilder: (context, index) {
-                return _ReleaseCard(
-                  item: display[index],
-                  pdfRoute: pdfRoute,
-                  index: index,
-                );
-              },
+          Padding(
+            padding: const EdgeInsets.only(bottom: 28),
+            child: SizedBox(
+              height: 300,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: display.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 14),
+                itemBuilder: (context, index) {
+                  return _ReleaseCard(
+                    item: display[index],
+                    pdfRoute: pdfRoute,
+                    index: index,
+                  );
+                },
+              ),
             ),
           ),
       ],
@@ -102,9 +105,11 @@ class _ReleaseCard extends StatelessWidget {
     return SizedBox(
       width: 170,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
+          SizedBox(
+            height: 176,
             child: Material(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -225,7 +230,7 @@ class _MiniAction extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(10),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
@@ -277,22 +282,24 @@ class PublicHomeLibrarySections extends StatelessWidget {
           listRoute: AppRoutes.library,
           pdfRoute: AppRoutes.libraryPdf,
         ),
-        PublicHomeLibraryCarousel(
-          meta: PublicSectionMeta.sharhs,
-          items: sharhs,
-          limit: limit,
-          emptyMessage: libraryKindConfigs[LibraryKind.sharhs]!.emptyMessage,
-          listRoute: AppRoutes.sharhs,
-          pdfRoute: AppRoutes.sharhsPdf,
-        ),
-        PublicHomeLibraryCarousel(
-          meta: PublicSectionMeta.manzumas,
-          items: manzumas,
-          limit: limit,
-          emptyMessage: libraryKindConfigs[LibraryKind.manzumas]!.emptyMessage,
-          listRoute: AppRoutes.manzumas,
-          pdfRoute: AppRoutes.manzumasPdf,
-        ),
+        if (sharhs.isNotEmpty)
+          PublicHomeLibraryCarousel(
+            meta: PublicSectionMeta.sharhs,
+            items: sharhs,
+            limit: limit,
+            emptyMessage: libraryKindConfigs[LibraryKind.sharhs]!.emptyMessage,
+            listRoute: AppRoutes.sharhs,
+            pdfRoute: AppRoutes.sharhsPdf,
+          ),
+        if (manzumas.isNotEmpty)
+          PublicHomeLibraryCarousel(
+            meta: PublicSectionMeta.manzumas,
+            items: manzumas,
+            limit: limit,
+            emptyMessage: libraryKindConfigs[LibraryKind.manzumas]!.emptyMessage,
+            listRoute: AppRoutes.manzumas,
+            pdfRoute: AppRoutes.manzumasPdf,
+          ),
       ],
     );
   }
