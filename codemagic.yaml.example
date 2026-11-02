@@ -87,6 +87,8 @@ workflows:
         cancel_previous_submissions: true
         release_type: AFTER_APPROVAL
 
+  # Separate from the iOS workflow. The first AAB is uploaded by hand in Play Console.
+  # Later builds of this workflow publish to the production track.
   flutter-android-play:
     name: Flutter Android (Google Play) — CUSTOMER_NAME
     max_build_duration: 120
@@ -121,8 +123,8 @@ workflows:
     publishing:
       google_play:
         credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-        track: internal
-        submit_as_draft: true
+        track: production
+        submit_as_draft: false
 
   flutter-ios-unsigned:
     name: Flutter iOS (compile check, no signing)

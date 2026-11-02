@@ -9,6 +9,8 @@ import '../models/video_call_session.dart';
 import '../providers/video_call_providers.dart';
 import '../screens/agora_video_call_screen.dart';
 
+int? _parentJoinInFlight;
+
 /// Joins the active teacher video call for a chat thread, if one exists.
 Future<void> openParentVideoCallFromChat(
   WidgetRef ref, {
@@ -44,9 +46,13 @@ Future<void> openParentVideoCallFromMeeting(
   int? studentId,
   DateTime? startDateTime,
 }) async {
+  if (_parentJoinInFlight != null) return;
+  _parentJoinInFlight = meetingId;
+
   final prefs = await SharedPreferences.getInstance();
   final token = prefs.getString(AppConstants.keyAuthToken)?.trim();
   if (token == null || token.isEmpty) {
+    _parentJoinInFlight = null;
     _showMessage(ref, 'يرجى تسجيل الدخول.');
     return;
   }
@@ -77,6 +83,8 @@ Future<void> openParentVideoCallFromMeeting(
     );
   } catch (e) {
     _showMessage(ref, e.toString());
+  } finally {
+    _parentJoinInFlight = null;
   }
 }
 

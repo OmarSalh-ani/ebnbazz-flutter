@@ -30,6 +30,20 @@ class ParentVideoCallApi {
     }
   }
 
+  /// False when the meeting was ended or deleted. Network errors are thrown.
+  Future<bool> isActive(int meetingId) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/api/parent/VideoCall/$meetingId/status',
+      );
+      return response.data?['active'] == true;
+    } on DioException catch (e) {
+      final code = e.response?.statusCode;
+      if (code == 400 || code == 403 || code == 404) return false;
+      throw ApiException.fromDioException(e);
+    }
+  }
+
   Future<ParentVideoCallJoinResult> join(int meetingId, {int? studentId}) async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(

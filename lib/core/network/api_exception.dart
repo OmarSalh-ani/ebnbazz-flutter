@@ -16,6 +16,9 @@ class ApiException implements Exception {
     if (data is Map && data['message'] != null) {
       return ApiException(data['message'].toString(), statusCode: statusCode);
     }
+    if (data is String && data.trim().isNotEmpty) {
+      return ApiException(data.trim(), statusCode: statusCode);
+    }
     return ApiException('حدث خطأ، يرجى المحاولة لاحقاً', statusCode: statusCode);
   }
 

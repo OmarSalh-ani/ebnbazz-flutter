@@ -334,7 +334,7 @@ class _LibraryBookCard extends StatelessWidget {
                             const SizedBox(width: 5),
                             Flexible(
                               child: Text(
-                                'الاصدار الصوتي',
+                                'الإصدار الصوتي',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: AppFonts.cairo(

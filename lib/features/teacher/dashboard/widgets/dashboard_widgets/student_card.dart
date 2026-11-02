@@ -8,6 +8,7 @@ import 'package:masged_parent_app/features/video_call/models/video_call_particip
 import 'package:masged_parent_app/features/video_call/models/video_call_session.dart';
 import 'package:masged_parent_app/features/video_call/providers/video_call_providers.dart';
 import 'package:masged_parent_app/features/video_call/screens/agora_video_call_screen.dart';
+import 'package:masged_parent_app/features/video_call/utils/teacher_video_call_launcher.dart';
 import 'package:masged_parent_app/teacher_core/network/api_exception.dart';
 import '../../../attendance/providers/attendance_providers.dart';
 import '../../../students/providers/students_providers.dart';
@@ -337,6 +338,8 @@ Future<void> _startVideoCall(
     return;
   }
 
+  if (!beginTeacherVideoCallLaunch()) return;
+
   try {
     final created = await ref.read(videoCallApiProvider).createCall(
           meetingName: 'مكالمة — ${student.name}',
@@ -373,5 +376,7 @@ Future<void> _startVideoCall(
         SnackBar(content: Text(e.toString())),
       );
     }
+  } finally {
+    endTeacherVideoCallLaunch();
   }
 }

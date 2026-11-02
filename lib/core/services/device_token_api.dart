@@ -11,6 +11,7 @@ class DeviceTokenApi {
   Future<void> register({
     required String fcmToken,
     required String platform,
+    required String installationId,
   }) async {
     try {
       await _dio.post(
@@ -18,6 +19,7 @@ class DeviceTokenApi {
         data: {
           'fcmToken': fcmToken,
           'platform': platform,
+          'installationId': installationId,
         },
       );
     } on DioException catch (e) {

@@ -223,6 +223,10 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       }
     } catch (_) {
       try {
+        if (await _outgoingTextAlreadySaved(text)) {
+          _messageController.clear();
+          return;
+        }
         await api.sendMessageRest(
           teacherId: widget.thread.teacherId,
           studentId: _activeStudentId,
@@ -237,6 +241,28 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
           );
         }
       }
+    }
+  }
+
+  Future<bool> _outgoingTextAlreadySaved(String text) async {
+    try {
+      final list = await ref.read(chatApiServiceProvider).getMessages(
+            teacherId: widget.thread.teacherId,
+            studentId: _activeStudentId,
+          );
+      if (!mounted || list.isEmpty) return false;
+      final last = list.last;
+      if (!last.isSentByMe || last.text.trim() != text) return false;
+      setState(() {
+        _messages
+          ..clear()
+          ..addAll(list);
+        _loadingHistory = false;
+      });
+      _scrollToBottom();
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 

@@ -36,6 +36,7 @@ import '../../features/teacher/auth/providers/auth_providers.dart';
 import '../../firebase_options.dart';
 
 import 'device_token_api.dart';
+import 'push_installation_id.dart';
 
 import 'foreground_push_message.dart';
 
@@ -255,6 +256,8 @@ class PushNotificationService {
 
     try {
 
+      final installationId = await PushInstallationId.getOrCreate();
+
       if (role == AppRole.teacher) {
 
         final teacher = _ref!.read(authControllerProvider).valueOrNull;
@@ -266,6 +269,8 @@ class PushNotificationService {
           fcmToken: token,
 
           platform: platform,
+
+          installationId: installationId,
 
         );
 
@@ -284,6 +289,8 @@ class PushNotificationService {
         fcmToken: token,
 
         platform: platform,
+
+        installationId: installationId,
 
       );
 

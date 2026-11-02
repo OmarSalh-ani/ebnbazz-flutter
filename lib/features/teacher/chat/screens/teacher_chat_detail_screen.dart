@@ -19,6 +19,7 @@ import 'package:masged_parent_app/features/video_call/models/video_call_particip
 import 'package:masged_parent_app/features/video_call/models/video_call_session.dart';
 import 'package:masged_parent_app/features/video_call/providers/video_call_providers.dart';
 import 'package:masged_parent_app/features/video_call/screens/agora_video_call_screen.dart';
+import 'package:masged_parent_app/features/video_call/utils/teacher_video_call_launcher.dart';
 import '../../../chat/widgets/chat_conversation_scaffold.dart';
 import '../../../chat/widgets/chat_thread_app_bar_title.dart';
 import '../models/parent_chat_thread_vm.dart';
@@ -216,6 +217,10 @@ class _TeacherChatDetailScreenState
       }
     } catch (_) {
       try {
+        if (await _outgoingTextAlreadySaved(text)) {
+          _messageController.clear();
+          return;
+        }
         await api.sendMessageRest(
           studentId: _studentId,
           teacherId: _teacherId,
@@ -230,6 +235,28 @@ class _TeacherChatDetailScreenState
           );
         }
       }
+    }
+  }
+
+  Future<bool> _outgoingTextAlreadySaved(String text) async {
+    try {
+      final list = await ref.read(teacherChatApiProvider).getMessages(
+            studentId: _studentId,
+            teacherId: _teacherId,
+          );
+      if (!mounted || list.isEmpty) return false;
+      final last = list.last;
+      if (!last.isSentByMe || last.text.trim() != text) return false;
+      setState(() {
+        _messages
+          ..clear()
+          ..addAll(list);
+        _loadingHistory = false;
+      });
+      _scrollToBottom();
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -277,6 +304,8 @@ class _TeacherChatDetailScreenState
         ? studentName
         : widget.thread.title;
 
+    if (!beginTeacherVideoCallLaunch()) return;
+
     try {
       final created = await ref.read(videoCallApiProvider).createCall(
             meetingName: 'مكالمة — $displayName',
@@ -311,6 +340,8 @@ class _TeacherChatDetailScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString(), style: AppFonts.cairo())),
       );
+    } finally {
+      endTeacherVideoCallLaunch();
     }
   }
 

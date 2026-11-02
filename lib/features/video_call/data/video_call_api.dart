@@ -51,6 +51,10 @@ class VideoCallApi {
     );
   }
 
+  Future<void> heartbeat(int meetingId) async {
+    await _client.postCommand('/api/VideoCall/$meetingId/heartbeat');
+  }
+
   Future<VideoCallTokenResult> refreshToken(int meetingId) {
     return _client.post<VideoCallTokenResult>(
       '/api/VideoCall/$meetingId/token',

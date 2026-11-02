@@ -48,7 +48,8 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
   late final RtcEngineEventHandler _eventHandler;
   late final TextEditingController _notesController;
   Timer? _notesSaveTimer;
-  Timer? _durationTimer;
+  Timer? _heartbeatTimer;
+  Timer? _parentStatusTimer;
   DateTime? _joinedAt;
 
   final Set<int> _remoteUids = {};
@@ -97,6 +98,10 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
   static const int _speakingVolumeThreshold = 10;
 
   bool _leaving = false;
+  bool _bootstrapInFlight = false;
+  bool _endedOnServer = false;
+  bool _reconnecting = false;
+  bool _allowPop = false;
 
   @override
   void initState() {
@@ -121,17 +126,6 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
             _joined = true;
             _joinedAt ??= DateTime.now();
           });
-          _startDurationTimer();
-          final engine = _engine;
-          if (engine != null) {
-            unawaited(
-              engine.enableAudioVolumeIndication(
-                interval: 200,
-                smooth: 3,
-                reportVad: true,
-              ),
-            );
-          }
           if (!widget.session.isTeacher) {
             unawaited(_syncLocalMediaAfterJoin());
           }
@@ -194,64 +188,85 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
       },
       onAudioVolumeIndication: (connection, speakers, speakerNumber, totalVolume) {
         if (!mounted) return;
-        final reportedUids = <int>{};
-        var changed = false;
+        final speaking = <int>{};
+        var loudestUid = 0;
+        var loudestVolume = 0;
         for (final speaker in speakers) {
           final uid = speaker.uid ?? 0;
           if (!_isStudentRtcUid(uid)) continue;
-          reportedUids.add(uid);
           final vol = speaker.volume ?? 0;
-          if (_speakingVolumeByUid[uid] != vol) {
-            _speakingVolumeByUid[uid] = vol;
-            changed = true;
-          }
-          if (vol >= _speakingVolumeThreshold && _activeSpeakerUid != uid) {
-            _activeSpeakerUid = uid;
-            changed = true;
+          if (vol < _speakingVolumeThreshold) continue;
+          speaking.add(uid);
+          if (vol >= loudestVolume) {
+            loudestVolume = vol;
+            loudestUid = uid;
           }
         }
-        for (final uid in _remoteUids.where(_isStudentRtcUid)) {
-          if (!reportedUids.contains(uid) && (_speakingVolumeByUid[uid] ?? 0) > 0) {
-            _speakingVolumeByUid[uid] = 0;
-            changed = true;
-          }
-        }
-        if (_activeSpeakerUid != null &&
-            !_remoteUids.contains(_activeSpeakerUid) &&
-            (_speakingVolumeByUid[_activeSpeakerUid!] ?? 0) == 0) {
-          _activeSpeakerUid = null;
-          changed = true;
-        }
-        if (changed) setState(() {});
+        final previous = _speakingVolumeByUid.entries
+            .where((e) => e.value >= _speakingVolumeThreshold)
+            .map((e) => e.key)
+            .toSet();
+        final sameSpeakers = previous.length == speaking.length &&
+            previous.containsAll(speaking);
+        if (sameSpeakers) return;
+        setState(() {
+          _speakingVolumeByUid
+            ..clear()
+            ..addEntries(
+              speaking.map((uid) => MapEntry(uid, _speakingVolumeThreshold)),
+            );
+          _activeSpeakerUid = loudestUid == 0 ? null : loudestUid;
+        });
+      },
+      onConnectionStateChanged: (connection, state, reason) {
+        if (!mounted || _leaving) return;
+        final lost = _joined &&
+            (state == ConnectionStateType.connectionStateReconnecting ||
+                state == ConnectionStateType.connectionStateFailed);
+        if (_reconnecting == lost) return;
+        setState(() => _reconnecting = lost);
+      },
+      onTokenPrivilegeWillExpire: (connection, token) {
+        unawaited(_renewRtcToken());
       },
       onError: (err, msg) {
         debugPrint('Agora onError: $err $msg');
       },
     );
+    if (widget.session.isTeacher) {
+      _startTeacherHeartbeat();
+    } else {
+      _startParentStatusPoll();
+    }
     unawaited(_bootstrap());
   }
 
   Future<void> _bootstrap() async {
-    final cam = await AppPermissionHelper.requestRuntime(Permission.camera);
-    final mic = await AppPermissionHelper.requestRuntime(Permission.microphone);
-    if (!AppPermissionHelper.canUse(cam) || !AppPermissionHelper.canUse(mic)) {
-      if (mounted) {
-        setState(() {
-          _initializing = false;
-          _permissionNeedsSettings =
-              AppPermissionHelper.needsSettings(cam) ||
-              AppPermissionHelper.needsSettings(mic);
-          _error = _permissionNeedsSettings
-              ? 'تم رفض الكاميرا أو الميكروفون سابقاً. فعّلهما من الإعدادات لإكمال المكالمة.'
-              : 'يلزم السماح بالكاميرا والميكروفون لإكمال المكالمة. سيظهر طلب النظام عند المحاولة.';
-        });
-      }
-      return;
-    }
-
+    if (_bootstrapInFlight || _leaving || _engine != null) return;
+    _bootstrapInFlight = true;
+    RtcEngine? engine;
+    var wakelockOn = false;
     try {
+      final cam = await AppPermissionHelper.requestRuntime(Permission.camera);
+      final mic = await AppPermissionHelper.requestRuntime(Permission.microphone);
+      if (!AppPermissionHelper.canUse(cam) || !AppPermissionHelper.canUse(mic)) {
+        if (mounted) {
+          setState(() {
+            _initializing = false;
+            _permissionNeedsSettings =
+                AppPermissionHelper.needsSettings(cam) ||
+                AppPermissionHelper.needsSettings(mic);
+            _error = _permissionNeedsSettings
+                ? 'تم رفض الكاميرا أو الميكروفون سابقاً. فعّلهما من الإعدادات لإكمال المكالمة.'
+                : 'يلزم السماح بالكاميرا والميكروفون لإكمال المكالمة. سيظهر طلب النظام عند المحاولة.';
+          });
+        }
+        return;
+      }
+
       await WakelockPlus.enable();
-      final engine = createAgoraRtcEngine();
+      wakelockOn = true;
+      engine = createAgoraRtcEngine();
       await engine.initialize(
         RtcEngineContext(
           appId: AgoraConfig.appId,
@@ -287,6 +302,7 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
 
       if (!mounted) {
         await _tearDown(engine, stopWakelock: true);
+        wakelockOn = false;
         return;
       }
 
@@ -301,7 +317,11 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
           _error = e.toString();
         });
       }
-      await _tearDown(_engine, stopWakelock: true);
+      await _tearDown(engine ?? _engine, stopWakelock: wakelockOn);
+      if (identical(_engine, engine)) _engine = null;
+      wakelockOn = false;
+    } finally {
+      _bootstrapInFlight = false;
     }
   }
 
@@ -319,12 +339,15 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
       hub.on('callEnded', _onCallEnded);
       hub.on('handRaised', _onHandRaised);
       hub.on('callStateSynced', _onCallStateSynced);
+      hub.onreconnected(({String? connectionId}) {
+        unawaited(_joinHubGroup());
+      });
       if (!mounted) {
         await hub.stop();
         return;
       }
       _hub = hub;
-      await hub.invoke('joinCall', args: [widget.session.meetingId]);
+      await _joinHubGroup();
     } catch (e, st) {
       // Agora media still works; realtime mic/camera gating needs the hub.
       debugPrint('Video call hub unavailable: $e\n$st');
@@ -688,21 +711,128 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
 
   Future<void> _endCall({String? notes}) async {
     if (widget.session.isTeacher) {
-      try {
-        await _hub?.invoke('endCall', args: [
+      await _endMeetingOnServer(notes: notes);
+    }
+    await _leave();
+  }
+
+  Future<void> _endMeetingOnServer({String? notes}) async {
+    if (_endedOnServer || !widget.session.isTeacher) return;
+    _endedOnServer = true;
+    var hubEnded = false;
+    try {
+      if (_hub?.state == HubConnectionState.Connected) {
+        await _hub!.invoke('endCall', args: [
           widget.session.meetingId,
           notes ?? _notesController.text.trim(),
         ]);
-      } catch (e) {
-        debugPrint('endCall hub failed: $e');
+        hubEnded = true;
+      }
+    } catch (e) {
+      debugPrint('endCall hub failed: $e');
+      if (_isMeetingEndedError(e)) hubEnded = true;
+    }
+    if (hubEnded) return;
+    try {
+      await ref.read(videoCallApiProvider).deleteMeeting(widget.session.meetingId);
+    } catch (e) {
+      debugPrint('endCall rest failed: $e');
+    }
+  }
+
+  void _startTeacherHeartbeat() {
+    _heartbeatTimer?.cancel();
+    unawaited(_sendTeacherHeartbeat());
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      unawaited(_sendTeacherHeartbeat());
+    });
+  }
+
+  Future<void> _sendTeacherHeartbeat() async {
+    if (_leaving || !widget.session.isTeacher) return;
+    try {
+      await ref.read(videoCallApiProvider).heartbeat(widget.session.meetingId);
+    } catch (e) {
+      if (_isMeetingEndedError(e)) {
+        await _leave(endedByTeacher: true);
       }
     }
-    await _leave();
+  }
+
+  void _startParentStatusPoll() {
+    _parentStatusTimer?.cancel();
+    _parentStatusTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      unawaited(_pollParentMeetingStatus());
+    });
+  }
+
+  Future<void> _pollParentMeetingStatus() async {
+    if (_leaving || widget.session.isTeacher) return;
+    try {
+      final active = await ref
+          .read(parentVideoCallApiProvider)
+          .isActive(widget.session.meetingId);
+      if (!active) await _leave(endedByTeacher: true);
+    } catch (e, st) {
+      debugPrint('parent call status: $e\n$st');
+    }
+  }
+
+  Future<void> _renewRtcToken() async {
+    if (_leaving) return;
+    try {
+      final String token;
+      if (widget.session.isTeacher) {
+        final refreshed = await ref
+            .read(videoCallApiProvider)
+            .refreshToken(widget.session.meetingId);
+        token = refreshed.token;
+      } else {
+        final join = await ref.read(parentVideoCallApiProvider).join(
+              widget.session.meetingId,
+              studentId: widget.session.linkedStudentId,
+            );
+        token = join.token;
+      }
+      final engine = _engine;
+      if (engine == null || _leaving) return;
+      await engine.renewToken(token);
+    } catch (e) {
+      if (_isMeetingEndedError(e)) {
+        await _leave(endedByTeacher: true);
+      }
+    }
+  }
+
+  Future<void> _joinHubGroup() async {
+    final hub = _hub;
+    if (hub == null || hub.state != HubConnectionState.Connected || _leaving) {
+      return;
+    }
+    try {
+      await hub.invoke('joinCall', args: [
+        widget.session.meetingId,
+        widget.session.isTeacher ? 0 : (widget.session.linkedStudentId ?? 0),
+      ]);
+    } catch (e) {
+      debugPrint('joinCall failed: $e');
+      if (_isMeetingEndedError(e)) {
+        await _leave(endedByTeacher: !widget.session.isTeacher);
+      }
+    }
+  }
+
+  bool _isMeetingEndedError(Object error) {
+    final text = error.toString();
+    return text.contains('انتهت هذه المكالمة') ||
+        text.contains('المكالمة غير موجودة');
   }
 
   Future<void> _leave({bool endedByTeacher = false}) async {
     if (_leaving) return;
     _leaving = true;
+    _heartbeatTimer?.cancel();
+    _parentStatusTimer?.cancel();
     _notesSaveTimer?.cancel();
     await _lowerHandIfRaised();
     await _tearDown(_engine, stopWakelock: true);
@@ -722,8 +852,16 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
           ),
         );
       }
-      Navigator.of(context).pop();
+      _popRoute();
     }
+  }
+
+  void _popRoute() {
+    if (!mounted) return;
+    setState(() => _allowPop = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.of(context).pop();
+    });
   }
 
   Future<void> _tearDown(RtcEngine? engine, {required bool stopWakelock}) async {
@@ -741,47 +879,20 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
     }
   }
 
-  void _startDurationTimer() {
-    _durationTimer?.cancel();
-    _durationTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  String _formatMeetingStart(DateTime time) {
-    return intl.DateFormat('yyyy/MM/dd hh:mm a').format(time);
-  }
-
-  String _formatElapsed(Duration duration) {
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
-    if (hours > 0) {
-      return '${hours.toString().padLeft(2, '0')}:$minutes:$seconds';
-    }
-    return '$minutes:$seconds';
-  }
-
-  String? _meetingTimeSubtitle() {
-    final start = widget.session.startDateTime;
-    final parts = <String>[];
-    if (start != null) {
-      parts.add(_formatMeetingStart(start));
-    }
-    if (_joinedAt != null) {
-      parts.add('مدة ${_formatElapsed(DateTime.now().difference(_joinedAt!))}');
-    }
-    if (parts.isEmpty) return null;
-    return parts.join('  •  ');
-  }
-
   @override
   void dispose() {
     _notesSaveTimer?.cancel();
-    _durationTimer?.cancel();
+    _heartbeatTimer?.cancel();
+    _parentStatusTimer?.cancel();
     _notesController.dispose();
-    unawaited(_lowerHandIfRaised());
+    if (!_leaving && widget.session.isTeacher && !_endedOnServer) {
+      _endedOnServer = true;
+      final meetingId = widget.session.meetingId;
+      final api = ref.read(videoCallApiProvider);
+      unawaited(api.deleteMeeting(meetingId).catchError((_) => ''));
+    }
     if (!_leaving) {
+      unawaited(_lowerHandIfRaised());
       unawaited(_tearDown(_engine, stopWakelock: true));
       unawaited(_hub?.stop());
     }
@@ -792,14 +903,24 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
   @override
   Widget build(BuildContext context) {
     final engine = _engine;
+    final showClock =
+        widget.session.startDateTime != null || _joinedAt != null;
 
-    final meetingTimeSubtitle = _meetingTimeSubtitle();
-
-    return Scaffold(
+    return PopScope(
+      canPop: _allowPop,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop || _leaving) return;
+        if (widget.session.isTeacher) {
+          unawaited(_confirmEndCall());
+        } else {
+          unawaited(_leave());
+        }
+      },
+      child: Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black87,
-        toolbarHeight: meetingTimeSubtitle != null ? 72 : kToolbarHeight,
+        toolbarHeight: showClock ? 72 : kToolbarHeight,
         title: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -810,20 +931,13 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
               overflow: TextOverflow.ellipsis,
               style: AppFonts.cairo(
                 fontWeight: FontWeight.bold,
-                fontSize: meetingTimeSubtitle != null ? 16 : null,
+                fontSize: showClock ? 16 : null,
               ),
             ),
-            if (meetingTimeSubtitle != null)
-              Text(
-                meetingTimeSubtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppFonts.cairo(
-                  fontSize: 12,
-                  color: Colors.white70,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+            _CallClockSubtitle(
+              startDateTime: widget.session.startDateTime,
+              joinedAt: _joinedAt,
+            ),
           ],
         ),
         actions: [
@@ -925,6 +1039,23 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
                     children: [
                       if (widget.session.isTeacher && _raisedHands.isNotEmpty)
                         _teacherRaisedHandsBanner(),
+                      if (_reconnecting)
+                        Container(
+                          width: double.infinity,
+                          color: Colors.orange.shade800,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
+                          ),
+                          child: Text(
+                            'جاري إعادة الاتصال…',
+                            textAlign: TextAlign.center,
+                            style: AppFonts.cairo(
+                              color: Colors.white,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
                       if (!widget.session.isTeacher) _parentStatusBanner(),
                       if (!widget.session.isTeacher &&
                           !_parentMicPublished &&
@@ -1030,6 +1161,7 @@ class _AgoraVideoCallScreenState extends ConsumerState<AgoraVideoCallScreen> {
           },
         ),
       ),
+    ),
     );
   }
 
@@ -1896,5 +2028,82 @@ class _CallIconButton extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _CallClockSubtitle extends StatefulWidget {
+  const _CallClockSubtitle({
+    required this.startDateTime,
+    required this.joinedAt,
+  });
+
+  final DateTime? startDateTime;
+  final DateTime? joinedAt;
+
+  @override
+  State<_CallClockSubtitle> createState() => _CallClockSubtitleState();
+}
+
+class _CallClockSubtitleState extends State<_CallClockSubtitle> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncTimer();
+  }
+
+  @override
+  void didUpdateWidget(covariant _CallClockSubtitle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.joinedAt != widget.joinedAt) _syncTimer();
+  }
+
+  void _syncTimer() {
+    _timer?.cancel();
+    if (widget.joinedAt == null) return;
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = <String>[];
+    final start = widget.startDateTime;
+    if (start != null) {
+      parts.add(intl.DateFormat('yyyy/MM/dd hh:mm a').format(start));
+    }
+    final joined = widget.joinedAt;
+    if (joined != null) {
+      parts.add('مدة ${_formatElapsed(DateTime.now().difference(joined))}');
+    }
+    if (parts.isEmpty) return const SizedBox.shrink();
+    return Text(
+      parts.join('  •  '),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: AppFonts.cairo(
+        fontSize: 12,
+        color: Colors.white70,
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  static String _formatElapsed(Duration duration) {
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:$minutes:$seconds';
+    }
+    return '$minutes:$seconds';
   }
 }

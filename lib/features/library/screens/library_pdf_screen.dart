@@ -56,12 +56,12 @@ class _LibraryPdfScreenState extends State<LibraryPdfScreen> {
   Future<void> _openVoice() async {
     final uri = Uri.tryParse(widget.release.youtubeUrl.trim());
     if (uri == null) {
-      _showMessage('رابط الاصدار الصوتي غير متوفر');
+      _showMessage('رابط الإصدار الصوتي غير متوفر');
       return;
     }
     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!launched && mounted) {
-      _showMessage('تعذر فتح الاصدار الصوتي');
+      _showMessage('تعذر فتح الإصدار الصوتي');
     }
   }
 
@@ -134,7 +134,7 @@ class _LibraryPdfScreenState extends State<LibraryPdfScreen> {
           actions: [
             if (widget.release.hasYoutubeUrl)
               IconButton(
-                tooltip: 'الاصدار الصوتي',
+                tooltip: 'الإصدار الصوتي',
                 onPressed: _openVoice,
                 icon: const Icon(Icons.headphones_rounded),
               ),

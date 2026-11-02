@@ -16,6 +16,7 @@ import '../../../video_call/models/video_call_models.dart';
 import '../../../video_call/models/video_call_session.dart';
 import '../../../video_call/providers/video_call_providers.dart';
 import '../../../video_call/screens/agora_video_call_screen.dart';
+import '../../../video_call/utils/teacher_video_call_launcher.dart';
 import '../../../video_call/utils/video_call_participant_utils.dart';
 
 class MeetingsScreen extends ConsumerStatefulWidget {
@@ -57,6 +58,7 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
     final authUser = await ref.read(authControllerProvider.future);
     _teacherName ??= authUser?.name;
 
+    if (!beginTeacherVideoCallLaunch()) return;
     setState(() => _saving = true);
     try {
       final created = await ref.read(videoCallApiProvider).createCall(
@@ -96,6 +98,7 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
         );
       }
     } finally {
+      endTeacherVideoCallLaunch();
       if (mounted) setState(() => _saving = false);
     }
   }
@@ -122,6 +125,7 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
       );
       return;
     }
+    if (!beginTeacherVideoCallLaunch()) return;
     try {
       final tok = await ref.read(videoCallApiProvider).refreshToken(row.id);
       final students = ref.read(attendanceStudentsProvider).value ?? const [];
@@ -149,6 +153,8 @@ class _MeetingsScreenState extends ConsumerState<MeetingsScreen> {
           SnackBar(content: Text(e.toString())),
         );
       }
+    } finally {
+      endTeacherVideoCallLaunch();
     }
   }
 

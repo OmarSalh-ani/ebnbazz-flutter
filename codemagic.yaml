@@ -103,6 +103,14 @@ workflows:
         cancel_previous_submissions: true
         release_type: AFTER_APPROVAL
 
+  # Separate from the iOS workflow. Start this one on its own to publish Android.
+  # One-time setup in the Codemagic UI (secrets stay out of this file):
+  # - Code signing identities: upload keystore, reference name must be ebnbazz_keystore
+  # - Variable group "google_play": secret GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+  #   (Google Play service account JSON; grant that account Releases on this app)
+  # The first AAB still has to be rolled out once by hand in Play Console.
+  # After that, this workflow uploads to the production track and sends it for review.
+  # Each upload needs a higher version code than the last one on the track.
   flutter-android-play:
     name: Flutter Android (Google Play) — EbnBazz
     max_build_duration: 120
@@ -136,8 +144,8 @@ workflows:
     publishing:
       google_play:
         credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-        track: internal
-        submit_as_draft: true
+        track: production
+        submit_as_draft: false
 
   flutter-ios-unsigned:
     name: Flutter iOS (compile check, no signing)

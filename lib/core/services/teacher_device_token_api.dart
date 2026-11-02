@@ -12,12 +12,14 @@ class TeacherDeviceTokenApi {
   Future<void> register({
     required String fcmToken,
     required String platform,
+    required String installationId,
   }) async {
     await _client.postVoid(
       '/api/device/register',
       body: {
         'fcmToken': fcmToken,
         'platform': platform,
+        'installationId': installationId,
       },
     );
   }

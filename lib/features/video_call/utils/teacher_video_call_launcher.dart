@@ -10,6 +10,19 @@ import '../providers/video_call_providers.dart';
 import '../screens/agora_video_call_screen.dart';
 import 'video_call_participant_utils.dart';
 
+bool _teacherCallLaunchInFlight = false;
+
+/// False when a teacher call screen is already opening or open.
+bool beginTeacherVideoCallLaunch() {
+  if (_teacherCallLaunchInFlight) return false;
+  _teacherCallLaunchInFlight = true;
+  return true;
+}
+
+void endTeacherVideoCallLaunch() {
+  _teacherCallLaunchInFlight = false;
+}
+
 Future<void> rejoinTeacherMeeting(
   WidgetRef ref,
   BuildContext context,
@@ -38,6 +51,8 @@ Future<void> rejoinTeacherMeeting(
     return;
   }
 
+  if (!beginTeacherVideoCallLaunch()) return;
+
   try {
     final tok = await ref.read(videoCallApiProvider).refreshToken(row.id);
     final students = ref.read(attendanceStudentsProvider).value ?? const [];
@@ -64,5 +79,7 @@ Future<void> rejoinTeacherMeeting(
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(e.toString())),
     );
+  } finally {
+    endTeacherVideoCallLaunch();
   }
 }
